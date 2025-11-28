@@ -1,59 +1,226 @@
+{% load static %}
 <!doctype html>
 <html lang="ru">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Генерация PDF — Generator</title>
-<style>
-body{font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:#f5f7fb; color:#111;}
-.container{max-width:720px;margin:64px auto;padding:24px;background:#fff;border-radius:12px;box-shadow:0 6px 24px rgba(16,24,40,0.08);}
-h1{margin:0 0 8px;font-size:20px}
-p{margin:0 0 18px;color:#4b5563}
-.controls{display:flex;gap:12px;align-items:center}
-button{padding:10px 16px;border-radius:8px;border:none;background:#0b5fff;color:#fff;cursor:pointer;font-weight:600}
-button:active{transform:translateY(1px)}
-.note{margin-top:14px;font-size:13px;color:#6b7280}
-</style>
+
+<link rel="stylesheet" href="{% static 'css/generator.css' %}">
 </head>
+
 <body>
+
+<header>
+    Генерация контрольной работы
+    <div class="theme-toggle" id="themeToggle">🌙</div>
+</header>
+
 <main class="container">
-<h1>Генерация PDF с задачами</h1>
-<p>Нажмите кнопку — сервер вернёт PDF с задачами из модуля <code>tasks.tasks</code>.</p>
 
+<h1>Выберите задачи</h1>
 
-<div class="controls">
-<form id="pdfForm" action="/generator/pdf/" method="get">
-<button type="submit">Сгенерировать PDF</button>
-</form>
-
-
-<button id="downloadFetch">Сгенерировать (fetch)</button>
+<!-- Панель времени -->
+<div id="timePanel" class="time-panel">
+    <svg class="icon" id="clockIcon" viewBox="0 0 24 24" fill="var(--icon-color)">
+        <path d="M12 1a11 11 0 1 0 11 11A11.013 11.013 0 0 0 12 1Zm0 20a9 9 0 1 1 9-9a9.01 9.01 0 0 1-9 9Zm.5-14h-1v6l5.25 3.15l.5-.85L12.5 13Z"/>
+    </svg>
+    Итого времени: <span id="timeTotal">0</span> мин из 45
 </div>
 
+<!-- Переключатель решений -->
+<div class="solutions-toggle">
+    <input type="checkbox" name="with_solutions" id="solutionsCheckbox" form="generatorForm">
+    <label for="solutionsCheckbox">Добавить решения в PDF</label>
+</div>
 
-<p class="note">Если PDF не скачивается автоматически, проверь настройки браузера: некоторые браузеры открывают PDF в новой вкладке.</p>
+<!-- Фильтры -->
+<div class="filters">
+    <select id="filterLevel">
+        <option value="">Все уровни</option>
+        <option value="1">Уровень 1</option>
+        <option value="2">Уровень 2</option>
+        <option value="3">Уровень 3</option>
+    </select>
+
+    <select id="filterTopic">
+        <option value="">Все темы</option>
+        {% for topic in all_topics %}
+            <option value="{{ topic }}">{{ topic }}</option>
+        {% endfor %}
+    </select>
+</div>
+
+<form id="generatorForm" action="/generator/pdf/" method="post">
+{% csrf_token %}
+
+<div id="taskContainer">
+{% for task in tasks %}
+<div class="task-item"
+    data-level="{{ task.level }}"
+    data-topic="{{ task.topic }}"
+    data-time="{{ task.time_minutes }}"
+    onclick="">
+    
+    <!-- Чекбокс -->
+    <div style="margin-right:14px; margin-top:4px;">
+        <input type="checkbox"
+            name="selected_tasks"
+            value="{{ task.id }}"
+            class="task-checkbox">
+    </div>
+
+    <!-- Контент задачи -->
+    <div style="width:100%;">
+
+        <!-- Заголовок + глаз -->
+        <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+
+            <div>
+                <strong>№{{ task.id }} — {{ task.topic }}</strong>
+            </div>
+
+            <!-- Глаз справа, клик НЕ влияет на чекбокс -->
+            <div class="preview-btn"
+                style="cursor:pointer; font-size:20px; padding-left:12px;"
+                data-id="{{ task.id }}"
+                data-topic="{{ task.topic }}"
+                data-level="{{ task.level }}"
+                data-desc="{{ task.description }}"
+                data-task="{{ task.task|escapejs }}"
+                onclick="event.stopPropagation();">
+                👁
+            </div>
+        </div>
+
+        <div class="task-meta">
+            🔵 Уровень: {{ task.level }} • ⏱ {{ task.time_minutes }} мин
+        </div>
+
+        <div class="task-desc">
+            {{ task.description }}
+        </div>
+
+    </div>
+</div>
+{% endfor %}
+</div>
+
+<button id="submitBtn" type="submit">Сгенерировать PDF</button>
+</form>
+<!-- ===== МОДАЛ ===== -->
+<div class="modal-bg" id="modalBg">
+    <div class="modal">
+        <div class="modal-close" id="modalClose">✖</div>
+        <h2 id="modalTitle"></h2>
+
+        <div class="modal-block"><strong>Тема:</strong> <span id="modalTopic"></span></div>
+        <div class="modal-block"><strong>Уровень:</strong> <span id="modalLevel"></span></div>
+        <div class="modal-block"><strong>Описание:</strong> <span id="modalDesc"></span></div>
+        <div class="modal-block"><strong>Задача:</strong><br><pre id="modalTask" style="white-space: pre-wrap;"></pre></div>
+    </div>
+</div>
 </main>
 
-
 <script>
-// Альтернативный способ — получить PDF через fetch и сохранить как файл.
-document.getElementById('downloadFetch').addEventListener('click', async function(){
-try{
-const resp = await fetch('/generator/pdf/');
-if(!resp.ok) throw new Error('Ошибка при получении PDF');
-const blob = await resp.blob();
-const url = URL.createObjectURL(blob);
-const a = document.createElement('a');
-a.href = url;
-a.download = 'tasks.pdf';
-document.body.appendChild(a);
-a.click();
-a.remove();
-URL.revokeObjectURL(url);
-}catch(e){
-alert('Не удалось сгенерировать PDF: ' + e.message);
+/* -------------------- Пересчёт времени -------------------- */
+const checkboxes = document.querySelectorAll(".task-checkbox");
+const timePanel = document.getElementById("timeTotal");
+const timePanelBox = document.getElementById("timePanel");
+const submitBtn = document.getElementById("submitBtn");
+const MAX_TIME = 45;
+
+function recalcTime(){
+    let sum = 0;
+    checkboxes.forEach(cb => {
+        if(cb.checked){
+            sum += parseInt(cb.closest(".task-item").dataset.time);
+        }
+    });
+
+    timePanel.textContent = sum;
+
+    if(sum > MAX_TIME){
+        timePanelBox.classList.add("time-over");
+        submitBtn.disabled = true;
+    } else {
+        timePanelBox.classList.remove("time-over");
+        submitBtn.disabled = false;
+    }
 }
+
+checkboxes.forEach(cb => cb.addEventListener("change", recalcTime));
+
+/* -------------------- Фильтры -------------------- */
+function applyFilters(){
+    const level = document.getElementById("filterLevel").value;
+    const topic = document.getElementById("filterTopic").value;
+
+    document.querySelectorAll(".task-item").forEach(item => {
+        const lvl = item.dataset.level;
+        const tpc = item.dataset.topic;
+
+        const matchLevel = !level || lvl === level;
+        const matchTopic = !topic || tpc === topic;
+
+        item.style.display = matchLevel && matchTopic ? "flex" : "none";
+    });
+}
+
+document.getElementById("filterLevel").addEventListener("change", applyFilters);
+document.getElementById("filterTopic").addEventListener("change", applyFilters);
+
+/* -------------------- Тёмная тема -------------------- */
+
+const toggle = document.getElementById("themeToggle");
+
+function updateIcon(){
+    toggle.textContent = document.body.classList.contains("dark") ? "☀️" : "🌙";
+}
+
+if(localStorage.getItem("theme") === "dark"){
+    document.body.classList.add("dark");
+}
+updateIcon();
+
+toggle.addEventListener("click", () => {
+    document.body.classList.toggle("dark");
+    localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+    updateIcon();
 });
+
+/* -------------------- МОДАЛ -------------------- */
+
+const modalBg = document.getElementById("modalBg");
+const modalClose = document.getElementById("modalClose");
+
+const mTitle = document.getElementById("modalTitle");
+const mTopic = document.getElementById("modalTopic");
+const mLevel = document.getElementById("modalLevel");
+const mDesc = document.getElementById("modalDesc");
+const mTask = document.getElementById("modalTask");
+
+document.querySelectorAll(".preview-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+        mTitle.textContent = "Задача №" + btn.dataset.id;
+        mTopic.textContent = btn.dataset.topic;
+        mLevel.textContent = btn.dataset.level;
+        mDesc.textContent = btn.dataset.desc;
+        mTask.textContent = btn.dataset.task;
+
+        modalBg.style.display = "flex";
+    });
+});
+
+modalClose.addEventListener("click", () => {
+    modalBg.style.display = "none";
+});
+
+modalBg.addEventListener("click", (e) => {
+    if (e.target === modalBg) modalBg.style.display = "none";
+});
+
 </script>
+
 </body>
 </html>

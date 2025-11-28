@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>{% block title %}Платформа Геометрии{% endblock %}</title>
+
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: Inter, system-ui, -apple-system;
+        background: var(--bg);
+        color: var(--text);
+        transition: 0.3s;
+    }
+
+    :root[data-theme="light"] {
+        --bg: #f5f7fb;
+        --card-bg: #fff;
+        --text: #111;
+        --text-muted: #556;
+        --primary: #0b5fff;
+        --border: #e4e4e7;
+    }
+
+    :root[data-theme="dark"] {
+        --bg: #0d1117;
+        --card-bg: #161b22;
+        --text: #e6edf3;
+        --text-muted: #9ba3b4;
+        --primary: #378bff;
+        --border: #30363d;
+    }
+
+    .container {
+        max-width: 480px;
+        margin: 60px auto;
+        background: var(--card-bg);
+        padding: 32px;
+        border-radius: 14px;
+        box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+        border: 1px solid var(--border);
+    }
+
+    h2 {
+        margin-top: 0;
+        margin-bottom: 20px;
+        font-size: 24px;
+        text-align: center;
+    }
+
+    label {
+        font-weight: 600;
+        display: block;
+        margin-top: 12px;
+        margin-bottom: 4px;
+    }
+
+    input, select {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--card-bg);
+        color: var(--text);
+    }
+
+    button {
+        width: 100%;
+        background: var(--primary);
+        border: none;
+        padding: 12px;
+        margin-top: 20px;
+        color: #fff;
+        font-weight: 600;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+
+    .topbar {
+        padding: 16px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--card-bg);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .theme-toggle {
+        cursor: pointer;
+        font-size: 14px;
+        color: var(--text-muted);
+    }
+
+</style>
+
+<script>
+// Тёмная тема
+function toggleTheme() {
+    let html = document.documentElement;
+    html.dataset.theme = html.dataset.theme === "light" ? "dark" : "light";
+    localStorage.setItem("theme", html.dataset.theme);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    let s = localStorage.getItem("theme");
+    if (s) document.documentElement.dataset.theme = s;
+});
+</script>
+
+</head>
+
+<body>
+
+<div class="topbar">
+    <div style="font-weight:700;">Геометрия</div>
+    <div class="theme-toggle" onclick="toggleTheme()">🌙 Тема</div>
+</div>
+
+{% block content %}{% endblock %}
+</body>
+</html>

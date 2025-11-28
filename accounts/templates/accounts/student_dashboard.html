@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Панель ученика{% endblock %}
+{% block content %}
+
+<div class="container mt-4" style="text-align:center;">
+
+    <h2 class="mb-3">Панель ученика</h2>
+    <p class="mb-2">Привет, {{ request.user.username }}!</p>
+
+    <p style="color:var(--text-muted);">
+        Раздел находится в процессе доработки.<br>
+        Совсем скоро здесь появятся задачи, результаты и статистика.
+    </p>
+
+    <!-- Анимация загрузки -->
+    <div class="loader"></div>
+
+</div>
+
+<style>
+/* Стиль анимации загрузки */
+.loader {
+    margin: 25px auto;
+    width: 60px;
+    height: 60px;
+    border: 6px solid #e0e0e0;
+    border-top-color: #007bff;
+    border-radius: 50%;
+    animation: spin 1.2s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+</style>
+
+{% endblock %}
