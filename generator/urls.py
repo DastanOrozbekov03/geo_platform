@@ -1,7 +1,10 @@
+# generator/urls.py
 from django.urls import path
-from .views import index, generate_pdf
+from . import views
+
+app_name = "generator"
 
 urlpatterns = [
-    path("", index, name="generator_index"),
-    path("pdf/", generate_pdf, name="generate_pdf"),
+    path("", views.index, name="index"),
+    path("pdf/", views.generate_pdf, name="generate_pdf"),
 ]

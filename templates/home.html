@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -5,96 +6,12 @@
     <title>GeoGen — Генератор контрольных</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
 
-    <style>
-        /* --- ОСНОВНЫЕ ЦВЕТА --- */
-        :root {
-            --primary-blue: #0C4DA2;
-            --blue-light: #1977D2;
-            --blue-very-light: #E7F1FB;
-
-            --bg: #f6f7fb;
-            --text: #111;
-            --card-bg: #ffffff;
-            --card-border: #e3e6ef;
-        }
-
-        /* --- ТЁМНАЯ ТЕМА --- */
-        body.dark {
-            --bg: #0b0f1b;
-            --text: #e8ecff;
-            --card-bg: #131b2e;
-            --card-border: #2a3c62;
-        }
-
-        /* --- ГЛОБАЛЬНЫЕ СТИЛИ --- */
-        body {
-            background: var(--bg);
-            color: var(--text);
-            font-family: "Inter", sans-serif;
-            transition: background .25s, color .25s;
-        }
-
-        .navbar {
-            background: var(--primary-blue);
-        }
-        .navbar-brand, .nav-link {
-            color: #fff !important;
-        }
-
-        /* --- HERO-БЛОК --- */
-        .hero {
-            padding: 110px 0 90px;
-            background: var(--blue-light);
-            color: white;
-        }
-        .hero img {
-            max-width: 480px;
-            border-radius: 14px;
-            box-shadow: 0 6px 24px rgba(0,0,0,0.25);
-        }
-
-        /* --- Карточки возможностей --- */
-        .feature-card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 24px;
-            border: 1px solid var(--card-border);
-            transition: .25s ease;
-            text-align: center;
-        }
-        .feature-card img {
-            border-radius: 10px;
-            margin-bottom: 15px;
-        }
-        .feature-card:hover {
-            border-color: var(--primary-blue);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.10);
-            transform: translateY(-3px);
-        }
-
-        /* --- Футер --- */
-        footer {
-            background: #e8edf6;
-            padding: 18px 0;
-            margin-top: 40px;
-        }
-        body.dark footer {
-            background: #121d33;
-            color: #cfd9ff;
-        }
-
-        /* --- КНОПКА ТЕМЫ --- */
-        .theme-toggle {
-            cursor: pointer;
-            color: white;
-            font-size: 22px;
-            margin-left: 12px;
-            user-select: none;
-        }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 
 <body>
@@ -111,59 +28,44 @@
 
         <div class="collapse navbar-collapse" id="navMenu">
 
-            <!-- ЛЕВАЯ ЧАСТЬ МЕНЮ -->
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item"><a href="#features" class="nav-link">Функции</a></li>
                 <li class="nav-item"><a href="#about" class="nav-link">О проекте</a></li>
                 <li class="nav-item"><a href="#contacts" class="nav-link">Контакты</a></li>
 
                 {% if user.is_authenticated and user.teacher %}
-<li class="nav-item ms-2">
-    <a href="/generator/" class="btn btn-light text-primary fw-semibold">
-        Генератор
-    </a>
-</li>
-{% endif %}
+                <li class="nav-item ms-2">
+                    <a href="/generator/" class="btn btn-light text-primary fw-semibold">
+                        Генератор
+                    </a>
+                </li>
+                {% endif %}
             </ul>
 
-            <!-- ПРАВАЯ ЧАСТЬ — БЛОК ПОЛЬЗОВАТЕЛЯ -->
             <div class="d-flex align-items-center ms-3">
 
                 {% if user.is_authenticated %}
 
-                    <!-- Значок учителя -->
                     {% if user.teacher %}
                         <i class="bi bi-mortarboard text-white fs-4 me-2" title="Учитель"></i>
                     {% endif %}
 
-                    <!-- Значок ученика -->
                     {% if user.student %}
                         <i class="bi bi-person-circle text-white fs-4 me-2" title="Ученик"></i>
                     {% endif %}
 
-                    <span class="text-white me-3">
-                        {{ user.username }}
-                    </span>
+                    <span class="text-white me-3">{{ user.username }}</span>
 
-                    <a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm">
-                        Выйти
-                    </a>
+                    <a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm">Выйти</a>
 
                 {% else %}
-
                     <a href="{% url 'login' %}" class="text-white ms-3">Вход</a>
                     <span class="text-white">|</span>
-                    <a href="{% url 'register_teacher' %}" class="text-white ms-2">
-                        Регистрация (Учитель)
-                    </a>
+                    <a href="{% url 'register_teacher' %}" class="text-white ms-2">Регистрация (Учитель)</a>
                     <span class="text-white">|</span>
-                    <a href="{% url 'register_student' %}" class="text-white ms-2">
-                        Регистрация (Ученик)
-                    </a>
-
+                    <a href="{% url 'register_student' %}" class="text-white ms-2">Регистрация (Ученик)</a>
                 {% endif %}
 
-                <!-- ТУМБЛЕР ТЕМЫ -->
                 <div id="themeToggle" class="theme-toggle ms-3">🌙</div>
             </div>
 
@@ -171,18 +73,13 @@
     </div>
 </nav>
 
-<div style="padding:18px;">
-{% block content %}{% endblock %}
-</div>
+
 <section class="hero text-center">
     <div class="container">
         <h1 class="fw-bold">Генератор контрольных работ по геометрии</h1>
-        <p class="lead mt-3">
-            Умная система подбирает задачи по уровню сложности и формирует PDF до 45 минут.
-        </p>
+        <p class="lead mt-3">Умная система подбирает задачи по уровню сложности и формирует PDF до 45 минут.</p>
 
-        <img src="./images/./backgrond_geo.png"
-             alt="Геометрия" class="img-fluid mt-4">
+        <img src="{% static 'images/geometry.jpg' %}" alt="Геометрия" class="img-fluid mt-4 hero-img">
 
         <div class="mt-4">
             <a href="/generator/" class="btn btn-light btn-lg fw-semibold text-primary">
@@ -201,28 +98,25 @@
 
             <div class="col-md-4">
                 <div class="feature-card shadow-sm">
-                    <img src="./images/backgrond_geo.png"
-                         alt="Подбор задач" class="img-fluid">
-                    <h5 class="fw-bold">Подбор задач</h5>
-                    <p class="text-muted">Темы, уровни, контроль времени на выполнение.</p>
+                    <i class="bi bi-diagram-3 feature-icon"></i>
+                    <h5 class="fw-bold mt-3">Подбор задач</h5>
+                    <p class="text-muted">Темы, уровни, контроль времени.</p>
                 </div>
             </div>
 
             <div class="col-md-4">
                 <div class="feature-card shadow-sm">
-                    <img src="./images/backgrond_geo.png"
-                         alt="PDF" class="img-fluid">
-                    <h5 class="fw-bold">PDF за секунды</h5>
-                    <p class="text-muted">Строгий школьный формат, готовый к печати.</p>
+                    <i class="bi bi-filetype-pdf feature-icon"></i>
+                    <h5 class="fw-bold mt-3">PDF за секунды</h5>
+                    <p class="text-muted">Строгий школьный формат, полностью готовый к печати.</p>
                 </div>
             </div>
 
             <div class="col-md-4">
                 <div class="feature-card shadow-sm">
-                    <img src="https://via.placeholder.com/340x200/E7F1FB/0C4DA2?text=Случайные+параметры"
-                         alt="Параметры" class="img-fluid">
-                    <h5 class="fw-bold">Случайные параметры</h5>
-                    <p class="text-muted">Числа, буквы, варианты — всё автоматически.</p>
+                    <i class="bi bi-shuffle feature-icon"></i>
+                    <h5 class="fw-bold mt-3">Случайные параметры</h5>
+                    <p class="text-muted">Каждый вариант уникален автоматически.</p>
                 </div>
             </div>
 
@@ -233,29 +127,130 @@
 
 <section id="about" class="py-5 bg-white">
     <div class="container text-center">
-        <h2 class="fw-bold">О проекте</h2>
 
-        <img src="https://via.placeholder.com/700x300/0C4DA2/ffffff?text=Школа+и+Геометрия"
-             alt="О проекте" class="img-fluid rounded shadow mt-4 mb-4">
+        <i class="bi bi-info-circle icon-large"></i>
+        <h2 class="fw-bold mt-3">О проекте</h2>
 
-        <p class="fs-5 text-muted">
-            GeoGen — инструмент для учителей, который ускоряет подготовку контрольных работ,
-            обеспечивает равномерную нагрузку по времени и помогает сделать задания индивидуальными.
+        <div id="aboutCarousel" class="carousel slide about-carousel" data-bs-ride="carousel">
+
+            <div class="carousel-inner">
+                <div class="carousel-item active">
+                    <img src="{% static 'images/geometry.jpg' %}" class="d-block w-100" alt="Фото 1">
+                </div>
+
+                <div class="carousel-item">
+                    <img src="{% static 'images/backgrond_geo.png' %}" class="d-block w-100" alt="Фото 2">
+                </div>
+
+                <div class="carousel-item">
+                    <img src="{% static 'images/backgrond_geo.png' %}" class="d-block w-100" alt="Фото 3">
+                </div>
+
+                <div class="carousel-item">
+                    <img src="{% static 'images/geometry.jpg' %}" class="d-block w-100" alt="Фото 4">
+                </div>
+            </div>
+
+            <button class="carousel-control-prev" type="button" data-bs-target="#aboutCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon"></span>
+            </button>
+
+            <button class="carousel-control-next" type="button" data-bs-target="#aboutCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon"></span>
+            </button>
+
+            <div class="carousel-indicators">
+                <button type="button" data-bs-target="#aboutCarousel" data-bs-slide-to="0" class="active"></button>
+                <button type="button" data-bs-target="#aboutCarousel" data-bs-slide-to="1"></button>
+                <button type="button" data-bs-target="#aboutCarousel" data-bs-slide-to="2"></button>
+                <button type="button" data-bs-target="#aboutCarousel" data-bs-slide-to="3"></button>
+            </div>
+
+        </div>
+
+        <p class="fs-5 text-muted mt-3">
+            GeoGen помогает учителям быстро создавать контрольные работы, равномерно распределяя нагрузку и добавляя индивидуальные параметры.
         </p>
+
     </div>
 </section>
 
 
+
+
 <section id="contacts" class="py-5">
-    <div class="container text-center">
-        <h2 class="fw-bold">Контакты</h2>
+    <div class="container">
 
-        <img src="https://via.placeholder.com/600x250/E7F1FB/0C4DA2?text=Свяжитесь+с+нами"
-             alt="Контакты" class="img-fluid rounded shadow mt-3 mb-4">
+        <div class="text-center mb-4">
+            <i class="bi bi-telephone-inbound contact-icon"></i>
+            <h2 class="fw-bold mt-3">Контакты</h2>
+            <p class="fs-5 text-muted mt-2">Свяжитесь с нами удобным способом:</p>
+        </div>
 
-        <p class="fs-5 text-muted">Пишите нам для предложений или сотрудничества:</p>
-        <p class="fw-semibold mt-3">example@mail.com</p>
-        <p class="text-muted">Бишкек, Кыргызстан</p>
+        <div class="row justify-content-center">
+
+            <!-- Телефоны -->
+            <div class="col-md-5 mb-4">
+                <div class="contact-card">
+                    <h5 class="fw-bold mb-3">Телефоны</h5>
+
+                    <p class="fw-semibold fs-5 mb-2">
+                        <i class="bi bi-whatsapp me-2 whatsapp-icon"></i>
+                        <a href="https://wa.me/996XXXXXXXXX" class="contact-link">
+                            +996 XXX XX-XX-XX
+                        </a>
+                    </p>
+
+                    <p class="fw-semibold fs-5">
+                        <i class="bi bi-telephone me-2 phone-icon"></i>
+                        +996 XXX XX-XX-XX
+                    </p>
+                </div>
+            </div>
+
+            <!-- Соцсети -->
+            <div class="col-md-5 mb-4">
+                <div class="contact-card">
+                    <h5 class="fw-bold mb-3">Социальные сети</h5>
+
+                    <p class="fw-semibold fs-5 mb-2">
+                        <i class="bi bi-instagram me-2 instagram-icon"></i>
+                        <a href="https://instagram.com/yourpage" class="contact-link">
+                            Instagram
+                        </a>
+                    </p>
+
+                    <p class="fw-semibold fs-5">
+                        <i class="bi bi-facebook me-2 facebook-icon"></i>
+                        <a href="https://facebook.com/yourpage" class="contact-link">
+                            Facebook
+                        </a>
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+
+        <!-- Карта -->
+        <div class="mt-5">
+            <h4 class="fw-semibold mb-3">Мы на карте</h4>
+
+            <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2925.0207824075103!2d74.588!3d42.876!2m3!1f0!2f0!3f0!3m2!
+                1i1024!2i768!4f13.1!3m3!1m2!1s0x389eb7d310d12345%3A0x123456789abcdef!
+                2z0JHRg9GA0LXRg9C90YvQuSDQkNC90YLQvtC9!5e0!3m2!1sru!2skg!4v0000000000000"
+                width="100%"
+                height="350"
+                style="border:0; border-radius:16px; box-shadow:0 4px 18px rgba(0,0,0,0.15);"
+                allowfullscreen=""
+                loading="lazy">
+            </iframe>
+        </div>
+
     </div>
 </section>
 
@@ -264,32 +259,24 @@
     <p class="m-0">&copy; 2025 GeoGen — образовательный сервис.</p>
 </footer>
 
+
 <script>
-/* Загружаем тему */
+/* Тема */
 if(localStorage.getItem("theme") === "dark"){
     document.body.classList.add("dark");
 }
 
-/* Переключатель */
 const toggle = document.getElementById("themeToggle");
-
 toggle.addEventListener("click", () => {
     document.body.classList.toggle("dark");
-
-    if(document.body.classList.contains("dark")){
-        localStorage.setItem("theme", "dark");
-        toggle.textContent = "☀️";
-    } else {
-        localStorage.setItem("theme", "light");
-        toggle.textContent = "🌙";
-    }
+    localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+    toggle.textContent = document.body.classList.contains("dark") ? "☀️" : "🌙";
 });
 
-/* Иконка при загрузке */
 if(document.body.classList.contains("dark")){
     toggle.textContent = "☀️";
 }
 </script>
-
+{% block scripts %}{% endblock %}
 </body>
 </html>

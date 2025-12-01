@@ -96,3 +96,6 @@ def teacher_dashboard(request):
 @user_passes_test(lambda u: hasattr(u, "student"))
 def student_dashboard(request):
     return render(request, "accounts/student_dashboard.html")
+
+def dummy_view(request):
+    return redirect("generator:index")
