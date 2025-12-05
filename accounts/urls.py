@@ -19,6 +19,6 @@ urlpatterns = [
     path("test/", lambda r: render(r, "accounts/test.html"))
 ]
 
-urlpatterns = [
-    path("", dummy_view, name="accounts-home"),
-]
+# urlpatterns = [
+#     path("", dummy_view, name="accounts-home"),
+# ]

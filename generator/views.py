@@ -69,11 +69,8 @@ def generate_pdf(request):
     selected = request.POST.getlist("selected_tasks")
     with_solutions = request.POST.get("with_solutions") == "on"
 
-    preview = request.session.get('preview_tasks', [])
-    # если сессия пропала — сгенерируем заново
-    if not preview:
-        preview = make_preview_list()
-
+    preview = request.session.get("preview_tasks", [])
+    
     # фильтруем выбранные
     if selected:
         selected_ids = set(int(x) for x in selected)
@@ -86,7 +83,7 @@ def generate_pdf(request):
     chosen = []
     total_time = 0
     for t in tasks:
-        t_time = LEVEL_TIME.get(t.get("level", 1), 10)
+        t_time = int(t.get("time_minutes") or LEVEL_TIME.get(t.get("level", 1), 10))
         if total_time + t_time <= MAX_TIME:
             chosen.append(t)
             total_time += t_time
