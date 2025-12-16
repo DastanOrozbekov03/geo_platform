@@ -77,23 +77,29 @@
 </main>
 
 <script>
-/* простой JS: пересчёт времени и модал (копия твоего) */
-// const MAX_TIME = {{ MAX_TIME|default:45 }};
+/* === Устанавливаем MAX_TIME из Django === */
+const MAX_TIME = {{ MAX_TIME|default:45 }};
+
+/* Элементы */
 const checkboxes = document.querySelectorAll(".task-checkbox");
 const timePanel = document.getElementById("timeTotal");
 const submitBtn = document.getElementById("submitBtn");
 const timePanelBox = document.getElementById("timePanel");
 
-function recalcTime(){
+/* === Пересчёт времени === */
+function recalcTime() {
     let sum = 0;
+
     document.querySelectorAll(".task-item").forEach(item => {
         const cb = item.querySelector(".task-checkbox");
-        if(cb && cb.checked){
+        if (cb && cb.checked) {
             sum += parseInt(item.dataset.time);
         }
     });
+
     timePanel.textContent = sum;
-    if(sum > MAX_TIME){
+
+    if (sum > MAX_TIME) {
         timePanelBox.classList.add("time-over");
         submitBtn.disabled = true;
     } else {
@@ -102,9 +108,13 @@ function recalcTime(){
     }
 }
 
+/* Включаем обработчики */
 checkboxes.forEach(cb => cb.addEventListener("change", recalcTime));
 
-/* Модал */
+/* Запуск при загрузке страницы */
+recalcTime();
+
+/* === МОDАЛ === */
 const modalBg = document.getElementById("modalBg");
 const modalClose = document.getElementById("modalClose");
 const mTitle = document.getElementById("modalTitle");
@@ -126,8 +136,9 @@ document.querySelectorAll(".preview-btn").forEach(btn => {
 });
 
 modalClose.addEventListener("click", () => modalBg.style.display = "none");
-modalBg.addEventListener("click", (e) => { if(e.target === modalBg) modalBg.style.display = "none"; });
-
+modalBg.addEventListener("click", (e) => { 
+    if (e.target === modalBg) modalBg.style.display = "none"; 
+});
 </script>
 
 </body>

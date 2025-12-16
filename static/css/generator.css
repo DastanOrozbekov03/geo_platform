@@ -310,3 +310,8 @@ button:disabled {
             margin-left: 12px;
             user-select: none;
         }
+
+.time-over {
+    color: red;
+    font-weight: bold;
+}
