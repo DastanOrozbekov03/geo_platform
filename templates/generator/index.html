@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Генератор{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="container py-4">
+
+<h1 class="mb-3">Выбор задач</h1>
+
+<div id="timePanel" class="mb-3">
+    Итого времени:
+    <strong><span id="timeTotal">0</span></strong> мин из {{ MAX_TIME|default:45 }}
+</div>
+
+<form method="post" action="{% url 'generator:generate_pdf' %}">
+{% csrf_token %}
+
+{% for task in tasks %}
+<div class="border rounded p-3 mb-2 task-item" data-time="{{ task.time_minutes }}">
+    <label>
+        <input type="checkbox" class="task-checkbox" name="selected_tasks" value="{{ task.id }}">
+        №{{ task.id }} — {{ task.topic }}
+    </label>
+    <div class="text-muted small">
+        Уровень: {{ task.level }} · {{ task.time_minutes }} мин
+    </div>
+</div>
+{% endfor %}
+
+<button id="submitBtn" class="btn btn-primary mt-3">
+    Сгенерировать PDF
+</button>
+
+</form>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const MAX_TIME = {{ MAX_TIME|default:45 }};
+const timeTotal = document.getElementById("timeTotal");
+const submitBtn = document.getElementById("submitBtn");
+
+function recalc(){
+    let sum = 0;
+    document.querySelectorAll(".task-item").forEach(item => {
+        if(item.querySelector("input").checked){
+            sum += parseInt(item.dataset.time);
+        }
+    });
+    timeTotal.textContent = sum;
+    submitBtn.disabled = sum > MAX_TIME;
+}
+
+document.querySelectorAll(".task-checkbox")
+    .forEach(cb => cb.addEventListener("change", recalc));
+
+recalc();
+</script>
+{% endblock %}
