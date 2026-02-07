@@ -1,52 +1,68 @@
-{% load static %}
 <nav class="navbar navbar-expand-lg shadow-sm">
   <div class="container">
 
-    <a class="navbar-brand fw-semibold text-white" href="/">GeoGen</a>
+    <!-- BRAND -->
+    <a class="navbar-brand fw-bold" href="/">GeoGen</a>
 
-    <button class="navbar-toggler bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+    <button class="navbar-toggler" type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navMenu">
       <span class="navbar-toggler-icon"></span>
     </button>
 
     <div class="collapse navbar-collapse" id="navMenu">
 
+      <!-- LEFT MENU -->
+      {% if home %}
       <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-        <li class="nav-item"><a href="#features" class="nav-link">Функции</a></li>
-        <li class="nav-item"><a href="#about" class="nav-link">О проекте</a></li>
-        <li class="nav-item"><a href="#contacts" class="nav-link">Контакты</a></li>
-
-        {% if user.is_authenticated and user.teacher %}
-        <li class="nav-item ms-2">
-          <a href="/generator/" class="btn btn-light text-primary fw-semibold">Генератор</a>
+        <li class="nav-item">
+          <a href="#features" class="nav-link">Функции</a>
         </li>
-        {% endif %}
+        <li class="nav-item">
+          <a href="#about" class="nav-link">О проекте</a>
+        </li>
+        <li class="nav-item">
+          <a href="#contacts" class="nav-link">Контакты</a>
+        </li>
       </ul>
+      {% endif %}
 
+      {% if user.is_authenticated and user.teacher %}
+      <li class="nav-item ms-2">
+        <a href="/generator/" class="btn btn-primary fw-semibold">
+          Генератор
+        </a>
+      </li>
+      {% endif %}
+
+      <!-- RIGHT PANEL -->
       <div class="d-flex align-items-center ms-3">
+
         {% if user.is_authenticated %}
 
           {% if user.teacher %}
-            <i class="bi bi-mortarboard text-white fs-4 me-2" title="Учитель"></i>
+            <i class="bi bi-mortarboard fs-4 me-2 text-primary" title="Учитель"></i>
           {% endif %}
 
           {% if user.student %}
-            <i class="bi bi-person-circle text-white fs-4 me-2" title="Ученик"></i>
+            <i class="bi bi-person-circle fs-4 me-2 text-primary" title="Ученик"></i>
           {% endif %}
 
-          <span class="text-white me-3">{{ user.username }}</span>
-          <a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm">Выйти</a>
+          <span class="me-3 fw-medium text-primary">
+            {{ user.username }}
+          </span>
+
+          <a href="{% url 'logout' %}" class="btn btn-outline-primary btn-sm">
+            Выйти
+          </a>
 
         {% else %}
-          <a href="{% url 'login' %}" class="text-white ms-3">Вход</a>
-          <span class="text-white">|</span>
-          <a href="{% url 'register_teacher' %}" class="text-white ms-2">Регистрация (Учитель)</a>
-          <span class="text-white">|</span>
-          <a href="{% url 'register_student' %}" class="text-white ms-2">Регистрация (Ученик)</a>
+          <a href="{% url 'login' %}" class="nav-link">Вход</a>
+          <span class="mx-1">|</span>
+          <a href="{% url 'register_teacher' %}" class="nav-link">Зарегистрироваться</a>
         {% endif %}
 
-        <div id="themeToggle" class="theme-toggle ms-3">🌙</div>
       </div>
-
     </div>
   </div>
 </nav>

@@ -1,13 +1,13 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required
 from .forms import TeacherSignUpForm, StudentSignUpForm, LoginForm
 from .models import Teacher, Student
 
 
 # ------------------------------ HOME ------------------------------
 def home(request):
-    return render(request, "home.html")
+    return render(request, "home.html", {"home": True})
 
 
 # ------------------------------ TEACHER REGISTER ------------------------------
@@ -19,14 +19,13 @@ def register_teacher(request):
             user.email = form.cleaned_data["email"]
             user.save()
 
-            # создаём профиль учителя
             Teacher.objects.create(
                 user=user,
-                school=form.cleaned_data.get('school', "")
+                school=form.cleaned_data.get("school", "")
             )
 
             login(request, user)
-            return redirect("teacher_dashboard")
+            return redirect("home")
     else:
         form = TeacherSignUpForm()
 
@@ -42,14 +41,13 @@ def register_student(request):
             user.email = form.cleaned_data["email"]
             user.save()
 
-            # создаём профиль ученика
             Student.objects.create(
                 user=user,
-                grade=form.cleaned_data.get('grade')
+                grade=form.cleaned_data.get("grade")
             )
 
             login(request, user)
-            return redirect("student_dashboard")
+            return redirect("home")
     else:
         form = StudentSignUpForm()
 
@@ -63,15 +61,7 @@ def user_login(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
-
-            # РЕДИРЕКТ ПО РОЛЯМ
-            if hasattr(user, "teacher"):
-                return redirect("teacher_dashboard")
-            if hasattr(user, "student"):
-                return redirect("student_dashboard")
-
             return redirect("home")
-
     else:
         form = LoginForm()
 
@@ -83,19 +73,3 @@ def user_login(request):
 def user_logout(request):
     logout(request)
     return redirect("home")
-
-
-# ------------------------------ DASHBOARDS ------------------------------
-@login_required
-@user_passes_test(lambda u: hasattr(u, "teacher"))
-def teacher_dashboard(request):
-    return render(request, "accounts/teacher_dashboard.html")
-
-
-@login_required
-@user_passes_test(lambda u: hasattr(u, "student"))
-def student_dashboard(request):
-    return render(request, "accounts/student_dashboard.html")
-
-def dummy_view(request):
-    return redirect("generator:index")

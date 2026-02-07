@@ -1,206 +1,227 @@
-/* ---------------- NAVBAR ---------------- */
+/* ===============================
+   GEO GEN — LIGHT BLUE THEME ONLY
+   =============================== */
+
+/* ---------- LIGHT THEME VARIABLES ---------- */
+:root {
+    --bg-main: #f1f5fb;
+    --bg-card: #f8fbff;
+    --bg-soft: #e4efff;
+
+    --text-main: #1f2d3d;
+    --text-muted: #5c6f82;
+
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+
+    --border-soft: #d6e4ff;
+
+    --shadow-soft: 0 8px 24px rgba(37, 99, 235, 0.12);
+}
+
+/* ---------- GLOBAL ---------- */
+body {
+    background: var(--bg-main);
+    color: var(--text-main);
+    transition: background 0.3s, color 0.3s;
+}
+
+a {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--primary-hover);
+}
+
+.text-muted,
+small {
+    color: var(--text-muted) !important;
+}
+
+/* ---------- NAVBAR ---------- */
 .navbar {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    border-radius: 0 0 12px 12px;
-    padding: 0.8rem 1rem;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border-soft);
 }
 
 .navbar-brand {
+    color: var(--primary) !important;
     font-weight: 700;
-    font-size: 1.6rem;
-    letter-spacing: 0.5px;
+}
+
+.navbar-brand:hover {
+    color: var(--primary-hover) !important;
 }
 
 .navbar-nav .nav-link {
-    font-weight: 500;
-    font-size: 1rem;
-    transition: all 0.2s ease-in-out;
+    color: var(--text-main) !important;
 }
 
 .navbar-nav .nav-link:hover {
-    color: #ffc107 !important;
-    transform: scale(1.05);
+    color: var(--primary) !important;
 }
 
-.navbar .btn {
+.nav-icon {
+    color: var(--primary);
+}
+
+.nav-username {
+    color: var(--text-main);
     font-weight: 500;
-    transition: all 0.2s ease;
 }
 
-.navbar .btn:hover {
-    transform: scale(1.05);
+/* ---------- HERO / SECTIONS ---------- */
+.hero,
+section {
+    background: linear-gradient(
+        120deg,
+        var(--bg-soft),
+        var(--bg-card)
+    );
 }
 
-/* ---------------- THEME TOGGLE ---------------- */
+/* ---------- CARDS / BLOCKS ---------- */
+.task-item,
+.feature-card,
+form {
+    background: var(--bg-card);
+    border: 1px solid var(--border-soft);
+    border-radius: 14px;
+    box-shadow: var(--shadow-soft);
+    transition: 0.25s;
+}
+
+.task-item:hover,
+.feature-card:hover {
+    background: var(--bg-soft);
+    transform: translateY(-4px);
+}
+
+/* ---------- FEATURES ---------- */
+.feature-icon,
+.bi {
+    font-size: 2.4rem;
+    color: var(--primary);
+    transition: 0.2s;
+}
+
+.bi:hover {
+    transform: scale(1.15);
+}
+
+/* ---------- GENERATOR / TIME PANEL ---------- */
+.time-panel {
+    background: var(--bg-soft);
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-weight: 600;
+}
+
+/* ---------- BUTTONS ---------- */
+.btn-primary {
+    background: var(--primary);
+    border: none;
+    color: #fff;
+    font-weight: 600;
+}
+
+.btn-primary:hover {
+    background: var(--primary-hover);
+}
+
+.btn-outline-primary {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary);
+    color: #fff;
+}
+
+/* ---------- FORMS ---------- */
+form {
+    padding: 30px;
+}
+
+input,
+select {
+    background: var(--bg-soft);
+    border: 1px solid var(--border-soft);
+    color: var(--text-main);
+}
+
+/* ---------- FOOTER ---------- */
+footer {
+    background: var(--bg-card);
+    border-top: 1px solid var(--border-soft);
+    color: var(--primary);
+}
+
+/* ---------- THEME TOGGLE ---------- */
 .theme-toggle {
     cursor: pointer;
-    font-size: 1.2rem;
-    user-select: none;
+    font-size: 1.3rem;
+    color: var(--primary);
 }
 
-/* ---------------- HOME PAGE ---------------- */
-.hero {
-    padding: 80px 0;
-    background: linear-gradient(120deg, #6f42c1, #0d6efd);
-    color: white;
-    text-align: center;
-    border-radius: 12px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+
+/* ---------- TASK PREVIEW ---------- */
+.task-preview {
+    animation: fadeSlide 0.25s ease-out;
 }
 
-.hero h1 {
-    font-weight: 700;
-    font-size: 2.5rem;
+@keyframes fadeSlide {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.hero p {
-    font-size: 1.2rem;
-    margin-top: 15px;
-}
-
-.hero img.hero-img {
-    max-width: 400px;
-    border-radius: 12px;
-    margin-top: 30px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-}
-
-/* ---------------- FEATURES ---------------- */
-.feature-card {
-    background: white;
-    border-radius: 12px;
-    padding: 25px 20px;
-    text-align: center;
+/* Глазок с рамкой, подсветкой и тенями */
+.preview-card {
+    background-color: #f9f9f9; /* светлый фон */
+    border-left: 4px solid #0d6efd; /* синяя полоса слева */
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     transition: all 0.3s ease;
 }
 
-.feature-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+.preview-card:hover {
+    background-color: #f1f5ff; /* легкий голубой при наведении */
+    transform: scale(1.01);
 }
 
-.feature-icon {
-    font-size: 2.5rem;
-    color: #0d6efd;
+.preview-task-text {
+    font-family: 'Times New Roman', serif;
+    font-size: 15px;
+    line-height: 1.5;
+    color: #333;
 }
 
-/* ---------------- GENERATOR PAGE ---------------- */
-.task-item {
-    display: flex;
-    align-items: flex-start;
-    background: #f8f9fa;
-    border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 12px;
-    transition: all 0.2s ease;
-}
-
-.task-item:hover {
-    background: #e9ecef;
-}
-
-.task-meta {
-    font-size: 0.9rem;
-    color: #495057;
-}
-
-.task-desc {
-    margin-top: 4px;
-    font-size: 0.95rem;
-}
-
-/* MODAL */
-.modal-bg {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1050;
-}
-
-.modal {
-    background: white;
-    border-radius: 12px;
-    padding: 20px;
-    width: 90%;
-    max-width: 600px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-}
-
-.modal-close {
-    float: right;
+/* кнопка глазка */
+.preview-toggle {
     cursor: pointer;
-    font-size: 1.2rem;
 }
 
-/* TIME PANEL */
-.time-panel {
-    margin-bottom: 20px;
-    padding: 10px 15px;
-    border-radius: 8px;
-    background: #f1f3f5;
-    font-weight: 500;
+/* если превысили лимит времени */
+.time-over {
+    color: #dc3545;
+    font-weight: bold;
 }
 
-.time-panel.time-over {
-    background: #ffe3e3;
-    color: #c92a2a;
+.task-warning {
+    color: #dc3545 !important;          /* красный цвет с приоритетом */
+    font-weight: bold !important;       /* жирный */
+    font-style: italic !important;      /* курсив */
+    background-color: #fff0f0 !important; /* лёгкий фон */
+    padding: 2px 4px !important;
+    border-radius: 3px !important;
+    font-size: 0.9em !important;
 }
 
-/* ---------------- ACCOUNTS (Login/Register forms) ---------------- */
-form {
-    background: white;
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-}
-
-form input, form select {
-    height: 45px;
-    border-radius: 8px;
-}
-
-form button {
-    height: 45px;
-    border-radius: 8px;
-}
-
-/* ---------------- FOOTER ---------------- */
-footer {
-    padding: 20px 0;
-    text-align: center;
-    background: #343a40;
-    color: white;
-    border-top: 2px solid #0d6efd;
-    margin-top: 40px;
-}
-
-/* ---------------- DARK MODE ---------------- */
-body.dark {
-    background: #121212;
-    color: #e9ecef;
-}
-
-body.dark .navbar {
-    background: #1f1f1f !important;
-}
-
-body.dark .feature-card {
-    background: #1f1f1f;
-    color: #e9ecef;
-}
-
-body.dark .task-item {
-    background: #1c1c1c;
-    color: #e9ecef;
-}
-
-body.dark form {
-    background: #1c1c1c;
-    color: #e9ecef;
-}

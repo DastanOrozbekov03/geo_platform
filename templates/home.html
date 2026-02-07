@@ -5,7 +5,7 @@
 
 {% block content %}
 
-<section class="py-5 text-center bg-light">
+<section class="py-5 text-center hero">
     <div class="container">
         <h1 class="fw-bold">Генератор контрольных по геометрии</h1>
         <p class="lead mt-3">
@@ -17,9 +17,15 @@
              style="max-height:300px;">
 
         <div>
-            <a href="/generator/" class="btn btn-primary btn-lg">
+            {% if user.is_authenticated %}
+                <a href="{% url 'generator:index' %}" class="btn btn-primary btn-lg">
                 Перейти к генератору
-            </a>
+                </a>
+            {% else %}
+                <a href="{% url 'login' %}" class="btn btn-primary btn-lg">
+                    Войти для доступа
+                </a>
+            {% endif %}
         </div>
     </div>
 </section>

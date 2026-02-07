@@ -10,9 +10,9 @@
 {% block content %}
 <main class="container py-4">
 
-<h1 class="mb-3">Выбор задач</h1>
+<h1 class="mb-3 fw-bold text-primary">Выбор задач</h1>
 
-<div id="timePanel" class="mb-3">
+<div id="timePanel" class="time-panel mb-3">
     Итого времени:
     <strong><span id="timeTotal">0</span></strong> мин из {{ MAX_TIME|default:45 }}
 </div>
@@ -22,15 +22,74 @@
 
 {% for task in tasks %}
 <div class="border rounded p-3 mb-2 task-item" data-time="{{ task.time_minutes }}">
-    <label>
-        <input type="checkbox" class="task-checkbox" name="selected_tasks" value="{{ task.id }}">
-        №{{ task.id }} — {{ task.topic }}
-    </label>
-    <div class="text-muted small">
+
+    <div class="d-flex justify-content-between align-items-center">
+        <label class="fw-semibold">
+            <input type="checkbox"
+                   class="task-checkbox"
+                   name="selected_tasks"
+                   value="{{ task.id }}">
+            №{{ task.id }} — {{ task.topic }}
+        </label>
+
+        <!-- КНОПКА ГЛАЗА -->
+        <button type="button"
+                class="btn btn-sm btn-outline-secondary preview-toggle"
+                data-target="preview-{{ task.id }}"
+                title="Посмотреть задачу">
+            👁
+        </button>
+    </div>
+
+    <div class="text-muted small mt-1">
         Уровень: {{ task.level }} · {{ task.time_minutes }} мин
     </div>
+
+    <!-- PREVIEW -->
+    <div id="preview-{{ task.id }}" class="task-preview mt-3 d-none">
+        <div class="card card-body bg-light preview-card p-3 shadow-sm rounded">
+
+            <div class="mb-2">
+                <strong>Тема:</strong> {{ task.topic }}
+            </div>
+
+            {% if task.description %}
+            <div class="mb-2">
+                <strong>Описание:</strong><br>
+                {{ task.description }}
+            </div>
+            {% endif %}
+
+            <div class="preview-task-text">
+                <strong>Задача:</strong><br>
+                {{ task.task }}
+               
+                <br>
+                <span style="
+                    color: #dc3545;
+                    font-weight: bold;
+                    font-style: italic;
+                    background-color: #fff0f0;
+                    padding: 2px 4px;
+                    border-radius: 3px;
+                    font-size: 0.9em;
+                ">
+                    ⚠️ параметры будут случайные для каждого ученика
+                </span>
+                
+            </div>
+
+        </div>
+    </div>
+
 </div>
 {% endfor %}
+
+<div class="mb-3">
+    <label for="num_students" class="form-label">Количество учеников:</label>
+    <input type="number" id="num_students" name="num_students" class="form-control"
+            value="1" min="1" max="100" required>
+</div>
 
 <button id="submitBtn" class="btn btn-primary mt-3">
     Сгенерировать PDF
@@ -45,6 +104,7 @@
 const MAX_TIME = {{ MAX_TIME|default:45 }};
 const timeTotal = document.getElementById("timeTotal");
 const submitBtn = document.getElementById("submitBtn");
+const timePanel = document.getElementById("timePanel");
 
 function recalc(){
     let sum = 0;
@@ -53,13 +113,37 @@ function recalc(){
             sum += parseInt(item.dataset.time);
         }
     });
+
     timeTotal.textContent = sum;
-    submitBtn.disabled = sum > MAX_TIME;
+
+    if(sum > MAX_TIME){
+        submitBtn.disabled = true;
+        timePanel.classList.add("time-over");
+    } else {
+        submitBtn.disabled = false;
+        timePanel.classList.remove("time-over");
+    }
 }
 
 document.querySelectorAll(".task-checkbox")
     .forEach(cb => cb.addEventListener("change", recalc));
 
 recalc();
+
+// preview toggle
+document.querySelectorAll(".preview-toggle").forEach(btn => {
+    btn.addEventListener("click", () => {
+        const id = btn.dataset.target;
+        const preview = document.getElementById(id);
+
+        if (preview.classList.contains("d-none")) {
+            preview.classList.remove("d-none");
+            btn.textContent = "🙈";
+        } else {
+            preview.classList.add("d-none");
+            btn.textContent = "👁";
+        }
+    });
+});
 </script>
 {% endblock %}
