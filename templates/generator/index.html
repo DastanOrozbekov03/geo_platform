@@ -1,149 +1,263 @@
 {% extends "base.html" %}
-{% load static %}
 
 {% block title %}Генератор{% endblock %}
 
-{% block head %}
-<link rel="stylesheet" href="{% static 'css/style.css' %}">
-{% endblock %}
-
 {% block content %}
-<main class="container py-4">
+<section class="container py-4">
 
-<h1 class="mb-3 fw-bold text-primary">Выбор задач</h1>
-
-<div id="timePanel" class="time-panel mb-3">
-    Итого времени:
-    <strong><span id="timeTotal">0</span></strong> мин из {{ MAX_TIME|default:45 }}
-</div>
-
-<form method="post" action="{% url 'generator:generate_pdf' %}">
-{% csrf_token %}
-
-{% for task in tasks %}
-<div class="border rounded p-3 mb-2 task-item" data-time="{{ task.time_minutes }}">
-
-    <div class="d-flex justify-content-between align-items-center">
-        <label class="fw-semibold">
-            <input type="checkbox"
-                   class="task-checkbox"
-                   name="selected_tasks"
-                   value="{{ task.id }}">
-            №{{ task.id }} — {{ task.topic }}
-        </label>
-
-        <!-- КНОПКА ГЛАЗА -->
-        <button type="button"
-                class="btn btn-sm btn-outline-secondary preview-toggle"
-                data-target="preview-{{ task.id }}"
-                title="Посмотреть задачу">
-            👁
-        </button>
+    <div class="generator-header mb-4">
+        <h1 class="mb-2 fw-bold text-primary">Выбор задач</h1>
+        <p class="generator-subtitle mb-0">
+            Выберите задания для контрольной работы. Общее время не должно превышать {{ MAX_TIME|default:45 }} минут.
+        </p>
     </div>
 
-    <div class="text-muted small mt-1">
-        Уровень: {{ task.level }} · {{ task.time_minutes }} мин
-    </div>
-
-    <!-- PREVIEW -->
-    <div id="preview-{{ task.id }}" class="task-preview mt-3 d-none">
-        <div class="card card-body bg-light preview-card p-3 shadow-sm rounded">
-
-            <div class="mb-2">
-                <strong>Тема:</strong> {{ task.topic }}
-            </div>
-
-            {% if task.description %}
-            <div class="mb-2">
-                <strong>Описание:</strong><br>
-                {{ task.description }}
-            </div>
-            {% endif %}
-
-            <div class="preview-task-text">
-                <strong>Задача:</strong><br>
-                {{ task.task }}
-               
-                <br>
-                <span style="
-                    color: #dc3545;
-                    font-weight: bold;
-                    font-style: italic;
-                    background-color: #fff0f0;
-                    padding: 2px 4px;
-                    border-radius: 3px;
-                    font-size: 0.9em;
-                ">
-                    ⚠️ параметры будут случайные для каждого ученика
-                </span>
-                
-            </div>
-
+    <div id="timePanel" class="time-panel mb-4">
+        <div>
+            Итого времени:
+            <strong><span id="timeTotal">0</span></strong> мин из {{ MAX_TIME|default:45 }}
+        </div>
+        <div class="small text-muted">
+            Выбрано задач: <strong id="selectedCount">0</strong>
         </div>
     </div>
 
-</div>
-{% endfor %}
+    {% if tasks %}
+        <div class="generator-toolbar mb-4 d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-outline-primary btn-sm" id="selectAllBtn">
+                <i class="bi bi-check2-square me-1"></i>Выбрать все
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="clearAllBtn">
+                <i class="bi bi-square me-1"></i>Снять выбор
+            </button>
 
-<div class="mb-3">
-    <label for="num_students" class="form-label">Количество учеников:</label>
-    <input type="number" id="num_students" name="num_students" class="form-control"
-            value="1" min="1" max="100" required>
-</div>
+            {% if all_topics %}
+                <select id="topicFilter" class="form-select form-select-sm w-auto">
+                    <option value="">Все темы</option>
+                    {% for topic in all_topics %}
+                        <option value="{{ topic }}">{{ topic }}</option>
+                    {% endfor %}
+                </select>
+            {% endif %}
+        </div>
+    {% endif %}
 
-<button id="submitBtn" class="btn btn-primary mt-3">
-    Сгенерировать PDF
-</button>
+    <form method="post" action="{% url 'generator:generate_pdf' %}" id="generatorForm">
+        {% csrf_token %}
 
-</form>
-</main>
+        {% if tasks %}
+            <div class="d-flex flex-column gap-3" id="taskList">
+                {% for task in tasks %}
+                    <div class="task-card task-item"
+                         data-time="{{ task.time_minutes }}"
+                         data-topic="{{ task.topic|lower }}"
+                         data-level="{{ task.level }}">
+                        <div class="d-flex justify-content-between align-items-start task-topbar">
+                            <label class="task-main-label">
+                                <input type="checkbox"
+                                       class="form-check-input task-checkbox"
+                                       name="selected_tasks"
+                                       value="{{ task.id }}">
+
+                                <div>
+                                    <div class="task-title">
+                                        №{{ task.id }} — {{ task.title }}
+                                    </div>
+
+                                    <div class="task-meta">
+                                        <span class="meta-badge">Класс: {{ task.grade }}</span>
+                                        <span class="meta-badge">Сложность: {{ task.difficulty }}</span>
+                                        <span class="meta-badge">Тема: {{ task.topic }}</span>
+                                        {% if task.subtopic %}
+                                            <span class="meta-badge">Подтема: {{ task.subtopic }}</span>
+                                        {% endif %}
+                                        <span class="meta-badge">Время: {{ task.time_minutes }} мин</span>
+                                        {% if task.description %}
+                                            <span class="meta-badge">Источник: {{ task.description }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </label>
+
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-secondary preview-toggle"
+                                    data-target="preview-{{ task.id }}"
+                                    aria-expanded="false"
+                                    title="Посмотреть задачу">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+
+                        <div id="preview-{{ task.id }}" class="task-preview d-none">
+                            <div class="card card-body preview-card p-3">
+                                <div class="mb-2">
+                                    <strong>Тема:</strong> {{ task.topic }}
+                                </div>
+
+                                {% if task.description %}
+                                    <div class="mb-3">
+                                        <strong>Описание:</strong><br>
+                                        {{ task.description }}
+                                    </div>
+                                {% endif %}
+
+                                <div class="preview-task-text">
+                                    <strong>Задача:</strong><br>
+                                    {{ task.task|linebreaksbr }}
+
+                                    <div class="warning-note mt-3">
+                                        ⚠️ Параметры будут случайными для каждого ученика
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-note">
+                Список задач пока пуст. Добавьте задачи в реестр, чтобы начать генерацию.
+            </div>
+        {% endif %}
+
+        <div class="form-section mt-4">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="num_students" class="form-label fw-semibold">
+                        Количество учеников
+                    </label>
+                    <input type="number"
+                           id="num_students"
+                           name="num_students"
+                           class="form-control"
+                           value="1"
+                           min="1"
+                           max="100"
+                           required>
+                    <div class="form-text">
+                        Для каждого ученика будут сгенерированы случайные параметры выбранных задач.
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-check mt-2 mt-md-0">
+                        <input class="form-check-input" type="checkbox" id="with_solutions" name="with_solutions">
+                        <label class="form-check-label" for="with_solutions">
+                            Включить решения в PDF
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="submit-wrap mt-4">
+                <button id="submitBtn" class="btn btn-primary px-4" type="submit">
+                    <i class="bi bi-file-earmark-pdf me-2"></i>Сгенерировать PDF
+                </button>
+            </div>
+        </div>
+    </form>
+</section>
 {% endblock %}
 
 {% block scripts %}
 <script>
-const MAX_TIME = {{ MAX_TIME|default:45 }};
-const timeTotal = document.getElementById("timeTotal");
-const submitBtn = document.getElementById("submitBtn");
-const timePanel = document.getElementById("timePanel");
+    const MAX_TIME = Number({{ MAX_TIME|default:45 }});
+    const timeTotal = document.getElementById("timeTotal");
+    const submitBtn = document.getElementById("submitBtn");
+    const timePanel = document.getElementById("timePanel");
+    const selectedCount = document.getElementById("selectedCount");
 
-function recalc(){
-    let sum = 0;
-    document.querySelectorAll(".task-item").forEach(item => {
-        if(item.querySelector("input").checked){
-            sum += parseInt(item.dataset.time);
-        }
-    });
+    const taskItems = document.querySelectorAll(".task-item");
+    const taskCheckboxes = document.querySelectorAll(".task-checkbox");
+    const previewButtons = document.querySelectorAll(".preview-toggle");
 
-    timeTotal.textContent = sum;
+    const selectAllBtn = document.getElementById("selectAllBtn");
+    const clearAllBtn = document.getElementById("clearAllBtn");
+    const topicFilter = document.getElementById("topicFilter");
 
-    if(sum > MAX_TIME){
-        submitBtn.disabled = true;
-        timePanel.classList.add("time-over");
-    } else {
-        submitBtn.disabled = false;
-        timePanel.classList.remove("time-over");
+    function getVisibleTaskItems() {
+        return Array.from(taskItems).filter(item => !item.classList.contains("d-none"));
     }
-}
 
-document.querySelectorAll(".task-checkbox")
-    .forEach(cb => cb.addEventListener("change", recalc));
+    function recalc() {
+        let total = 0;
+        let count = 0;
 
-recalc();
+        taskItems.forEach(item => {
+            const checkbox = item.querySelector(".task-checkbox");
+            const time = parseInt(item.dataset.time || "0", 10);
 
-// preview toggle
-document.querySelectorAll(".preview-toggle").forEach(btn => {
-    btn.addEventListener("click", () => {
-        const id = btn.dataset.target;
-        const preview = document.getElementById(id);
+            if (checkbox.checked && !item.classList.contains("d-none")) {
+                total += time;
+                count += 1;
+                item.classList.add("selected");
+            } else if (checkbox.checked) {
+                item.classList.add("selected");
+            } else {
+                item.classList.remove("selected");
+            }
+        });
 
-        if (preview.classList.contains("d-none")) {
-            preview.classList.remove("d-none");
-            btn.textContent = "🙈";
-        } else {
-            preview.classList.add("d-none");
-            btn.textContent = "👁";
-        }
+        timeTotal.textContent = total;
+        selectedCount.textContent = count;
+
+        const isOverLimit = total > MAX_TIME;
+        const hasSelected = count > 0;
+
+        submitBtn.disabled = isOverLimit || !hasSelected;
+        timePanel.classList.toggle("time-over", isOverLimit);
+    }
+
+    taskCheckboxes.forEach(cb => {
+        cb.addEventListener("change", recalc);
     });
-});
+
+    previewButtons.forEach(btn => {
+        btn.addEventListener("click", () => {
+            const targetId = btn.dataset.target;
+            const preview = document.getElementById(targetId);
+            const icon = btn.querySelector("i");
+            const isHidden = preview.classList.contains("d-none");
+
+            preview.classList.toggle("d-none");
+            btn.setAttribute("aria-expanded", isHidden ? "true" : "false");
+
+            if (icon) {
+                icon.className = isHidden ? "bi bi-eye-slash" : "bi bi-eye";
+            }
+        });
+    });
+
+    if (selectAllBtn) {
+        selectAllBtn.addEventListener("click", () => {
+            getVisibleTaskItems().forEach(item => {
+                item.querySelector(".task-checkbox").checked = true;
+            });
+            recalc();
+        });
+    }
+
+    if (clearAllBtn) {
+        clearAllBtn.addEventListener("click", () => {
+            taskCheckboxes.forEach(cb => cb.checked = false);
+            recalc();
+        });
+    }
+
+    if (topicFilter) {
+        topicFilter.addEventListener("change", () => {
+            const selectedTopic = topicFilter.value.trim().toLowerCase();
+
+            taskItems.forEach(item => {
+                const topic = (item.dataset.topic || "").trim().toLowerCase();
+                const show = !selectedTopic || topic === selectedTopic;
+                item.classList.toggle("d-none", !show);
+            });
+
+            recalc();
+        });
+    }
+
+    recalc();
 </script>
 {% endblock %}
