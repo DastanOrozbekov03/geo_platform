@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Добавить задачу{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <div class="mb-4">
+        <a href="{% url 'taskbank_dashboard' %}" class="text-decoration-none">
+            <i class="bi bi-arrow-left"></i>
+            Назад к банку задач
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+
+            <h1 class="fw-bold mb-1">Добавить задачу</h1>
+            <p class="text-muted mb-4">
+                Заполни задачу обычным способом. JSON писать не нужно.
+            </p>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <h5 class="fw-bold mb-3">1. Основная информация</h5>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">{{ form.subject.label_tag }}{{ form.subject }}</div>
+                    <div class="col-md-4">{{ form.topic.label_tag }}{{ form.topic }}</div>
+                    <div class="col-md-4">{{ form.subtopic.label_tag }}{{ form.subtopic }}</div>
+
+                    <div class="col-md-3">{{ form.grade.label_tag }}{{ form.grade }}</div>
+                    <div class="col-md-3">{{ form.difficulty.label_tag }}{{ form.difficulty }}</div>
+                    <div class="col-md-3">{{ form.time_minutes.label_tag }}{{ form.time_minutes }}</div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <div class="form-check">
+                            {{ form.is_active }}
+                            {{ form.is_active.label_tag }}
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        {{ form.title.label_tag }}
+                        {{ form.title }}
+                    </div>
+                </div>
+
+                <h5 class="fw-bold mb-3">2. Текст задачи</h5>
+
+                <div class="mb-3">
+                    <div class="mb-2">
+                        <button type="button" class="btn btn-sm btn-outline-primary param-btn" data-value="{A}">{A}</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary param-btn" data-value="{B}">{B}</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary param-btn" data-value="{C}">{C}</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary param-btn" data-value="{a}">{a}</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary param-btn" data-value="{b}">{b}</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary param-btn" data-value="{result}">{result}</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary param-btn" data-value="∠">∠</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary param-btn" data-value="△">△</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary param-btn" data-value="°">°</button>
+                    </div>
+
+                    {{ form.task_template.label_tag }}
+                    {{ form.task_template }}
+                </div>
+
+                <div class="mb-4">
+                    {{ form.solution_template.label_tag }}
+                    {{ form.solution_template }}
+                </div>
+
+                <h5 class="fw-bold mb-3">3. Параметры</h5>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        {{ form.numeric_param_names.label_tag }}
+                        {{ form.numeric_param_names }}
+                    </div>
+
+                    <div class="col-md-2">
+                        {{ form.number_from.label_tag }}
+                        {{ form.number_from }}
+                    </div>
+
+                    <div class="col-md-2">
+                        {{ form.number_to.label_tag }}
+                        {{ form.number_to }}
+                    </div>
+
+                    <div class="col-md-2">
+                        {{ form.number_step.label_tag }}
+                        {{ form.number_step }}
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="form-check mt-4">
+                            {{ form.use_letter_params }}
+                            {{ form.use_letter_params.label_tag }}
+                        </div>
+                    </div>
+
+                    <div class="col-md-9">
+                        {{ form.letter_param_names.label_tag }}
+                        {{ form.letter_param_names }}
+                    </div>
+                </div>
+
+
+                <h5 class="fw-bold mb-3">4. Формула</h5>
+
+                <div class="mb-4">
+                    {{ form.formula.label_tag }}
+                    {{ form.formula }}
+                </div>
+
+
+                <h5 class="fw-bold mb-3">5. Автоматический чертёж</h5>
+
+                <div class="alert alert-primary">
+                    <i class="bi bi-magic"></i>
+                    Чертёж создаётся автоматически по теме задачи.
+                    Например: если тема содержит слово <strong>треугольник</strong>,
+                    система сама нарисует треугольник. Если тема содержит слово
+                    <strong>отрезок</strong> — нарисует отрезок.
+                </div>
+
+                <div class="alert alert-light border">
+                    <strong>Важно:</strong>
+                    для автоматического чертежа укажи буквенные параметры:
+                    <code>A, B, C</code> для треугольника или <code>A, B</code> для отрезка.
+                </div>
+
+                {% if form.errors %}
+                    <div class="alert alert-danger">
+                        {{ form.errors }}
+                    </div>
+                {% endif %}
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{% url 'taskbank_dashboard' %}" class="btn btn-light">
+                        Отмена
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i>
+                        Сохранить задачу
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let activeTextarea = null;
+
+    document.querySelectorAll("textarea").forEach(function (textarea) {
+        textarea.addEventListener("focus", function () {
+            activeTextarea = textarea;
+        });
+    });
+
+    document.querySelectorAll(".param-btn").forEach(function (button) {
+        button.addEventListener("click", function () {
+            const value = button.dataset.value;
+
+            if (!activeTextarea) {
+                activeTextarea = document.querySelector("textarea");
+            }
+
+            const start = activeTextarea.selectionStart;
+            const end = activeTextarea.selectionEnd;
+
+            activeTextarea.value =
+                activeTextarea.value.substring(0, start) +
+                value +
+                activeTextarea.value.substring(end);
+
+            activeTextarea.focus();
+            activeTextarea.selectionStart = activeTextarea.selectionEnd = start + value.length;
+        });
+    });
+</script>
+{% endblock %}

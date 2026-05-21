@@ -16,6 +16,7 @@ class TopicAdmin(admin.ModelAdmin):
     list_display = ("id", "name", "subject")
     list_filter = ("subject",)
     search_fields = ("name", "subject__name")
+    autocomplete_fields = ("subject",)
 
 
 @admin.register(SubTopic)
@@ -23,6 +24,7 @@ class SubTopicAdmin(admin.ModelAdmin):
     list_display = ("id", "name", "topic")
     list_filter = ("topic", "topic__subject")
     search_fields = ("name", "topic__name", "topic__subject__name")
+    autocomplete_fields = ("topic",)
 
 
 @admin.register(Formula)
@@ -44,66 +46,61 @@ class TaskAdmin(admin.ModelAdmin):
         "subject",
         "topic",
         "subtopic",
-        "task_type",
         "difficulty",
         "formula",
         "time_minutes",
         "is_active",
     )
+
     list_filter = (
         "grade",
         "subject",
         "topic",
         "subtopic",
-        "task_type",
         "difficulty",
+        "formula",
         "is_active",
     )
+
     search_fields = (
         "title",
-        "source",
-        "source_number",
         "task_template",
         "solution_template",
     )
+
     list_editable = ("time_minutes", "is_active")
     autocomplete_fields = ("subject", "topic", "subtopic", "formula")
     save_on_top = True
 
-    readonly_fields = ("created_at", "updated_at", "admin_help_block")
+    readonly_fields = (
+        "admin_help_block",
+        "created_at",
+        "updated_at",
+    )
 
     fieldsets = (
-        ("Где находится задача", {
+        ("1. Основная информация", {
             "fields": (
+                "admin_help_block",
                 "subject",
                 "topic",
                 "subtopic",
                 "grade",
-            )
-        }),
-        ("Паспорт задачи", {
-            "fields": (
                 "title",
-                "source",
-                "source_number",
                 "difficulty",
                 "time_minutes",
                 "is_active",
             )
         }),
-        ("Тип задачи", {
-            "fields": (
-                "task_type",
-                "admin_help_block",
-            )
-        }),
-        ("Содержимое", {
+
+        ("2. Текст задачи", {
             "fields": (
                 "task_template",
                 "solution_template",
             )
         }),
-        ("Удобное заполнение параметров", {
+
+        ("3. Параметры задачи", {
             "fields": (
                 "numeric_param_names",
                 ("number_from", "number_to", "number_step"),
@@ -113,18 +110,22 @@ class TaskAdmin(admin.ModelAdmin):
                 "lowercase_letters",
             )
         }),
-        ("Продвинутый режим", {
+
+        ("4. Формула", {
+            "fields": (
+                "formula",
+            )
+        }),
+
+        ("Служебная информация", {
             "classes": ("collapse",),
             "fields": (
                 "params",
-                "formula",
+                "task_type",
+                "source",
+                "source_number",
                 "custom_generator_name",
                 "tikz_template",
-            )
-        }),
-        ("Служебное", {
-            "classes": ("collapse",),
-            "fields": (
                 "created_at",
                 "updated_at",
             )
@@ -132,24 +133,26 @@ class TaskAdmin(admin.ModelAdmin):
     )
 
     def admin_help_block(self, obj=None):
-        return mark_safe(
-            """
-            <div style="padding:12px 14px; border-radius:10px; background:#f8f9fa; border:1px solid #dee2e6;">
-                <strong>Как теперь проще заполнять:</strong>
-                <ul style="margin:10px 0 0 18px;">
-                    <li>Для чисел можно не писать JSON, а указать имена параметров и диапазон.</li>
-                    <li>Для букв можно включить "Заменять буквы" и указать имена переменных.</li>
-                    <li>Поле JSON остаётся для сложных случаев и ручного режима.</li>
-                    <li>Если JSON пустой, форма попробует собрать параметры автоматически.</li>
-                </ul>
-            </div>
-            """
-        )
+        return mark_safe("""
+        <div style="
+            padding:14px 16px;
+            border-radius:12px;
+            background:#eef6ff;
+            border:1px solid #b6dcff;
+            margin-bottom:10px;
+        ">
+            <strong style="font-size:15px;">Обычный режим добавления задачи</strong>
+            <ul style="margin:10px 0 0 20px;">
+                <li>В тексте задачи используй параметры: <code>{a}</code>, <code>{b}</code>, <code>{A}</code>, <code>{B}</code>, <code>{result}</code>.</li>
+                <li>Числовые параметры указывай через запятую: <code>a, b, h</code>.</li>
+                <li>Для букв включи “Заменять буквы” и укажи: <code>A, B, C</code>.</li>
+                <li>JSON заполнять не надо — система соберёт его автоматически.</li>
+                <li>Тип задачи автоматически ставится как “Шаблон + формула”.</li>
+            </ul>
+        </div>
+        """)
 
     admin_help_block.short_description = "Подсказка"
-
-class TaskAdmin(admin.ModelAdmin):
-    ...
 
     class Media:
         js = ("admin/task_param_helper.js",)

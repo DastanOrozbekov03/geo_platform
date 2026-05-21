@@ -21,12 +21,22 @@
           <a href="{% url 'home' %}" class="nav-link">Главная</a>
         </li>
 
-        {% if user.is_authenticated and user.teacher %}
+        {% if user.is_authenticated and user.teacher or user.is_staff or user.is_superuser %}
         <li class="nav-item">
           <a href="{% url 'generator:index' %}" class="nav-link">Генератор</a>
         </li>
         {% endif %}
 
+        {% if user.is_authenticated %}
+            {% if user.is_staff or user.is_superuser %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'taskbank_dashboard' %}">
+                        <i class="bi bi-journal-plus"></i>
+                        Банк задач
+                    </a>
+                </li>
+            {% endif %}
+        {% endif %}
       </ul>
 
       <!-- RIGHT PANEL -->

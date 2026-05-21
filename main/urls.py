@@ -23,5 +23,5 @@ urlpatterns = [
 
     path('', include("accounts.urls")),     # <── ДОБАВЬ ЭТО
     path("generator/", include("generator.urls")),
-
+    path("taskbank/", include("taskbank.urls")),
 ]

@@ -1,125 +1,95 @@
 import json
-import string
 
 from django import forms
 from .models import Task
 
 
-TASK_TYPE_HELP = {
-    "theory": "Теоретический вопрос или определение. Параметры и формула не нужны.",
-    "template_only": "Шаблонная задача без вычислительной формулы. Можно использовать параметры.",
-    "template_formula": "Шаблонная задача с параметрами и формулой. Нужно заполнить параметры и выбрать формулу.",
-    "proof": "Задача на доказательство. Обычно параметры и формула не нужны.",
-    "geometry_tikz": "Геометрическая задача с чертежом TikZ. Параметры и формула — по необходимости.",
-    "custom_generator": "Особая задача, которая генерируется Python-функцией. Нужно указать имя генератора.",
-}
-
-
 class TaskAdminForm(forms.ModelForm):
     params = forms.CharField(
-        label="Параметры (JSON)",
+        label="Параметры JSON",
         required=False,
         widget=forms.Textarea(attrs={
-            "rows": 6,
+            "rows": 5,
             "style": "font-family: Consolas, monospace;",
-            "placeholder": '{"a": [4, 5, 6], "h": [3, 4, 5]}'
         }),
-        help_text=(
-            "Продвинутый режим. Можно оставить пустым, если используешь поля ниже для автосборки параметров."
-        ),
+        help_text="Служебное поле. Обычно заполнять не нужно.",
     )
 
-    # -------------------------
-    # Числовые параметры
-    # -------------------------
     numeric_param_names = forms.CharField(
-        label="Имена числовых параметров",
+        label="Числовые параметры",
         required=False,
         widget=forms.TextInput(attrs={
-            "placeholder": "Например: a, h"
+            "placeholder": "Например: a, b, h"
         }),
-        help_text="Укажи имена переменных через запятую, которые используются в тексте задачи."
+        help_text="Имена числовых параметров через запятую."
     )
 
     number_from = forms.IntegerField(
-        label="Числа: от",
+        label="От",
         required=False,
-        help_text="Начальное значение диапазона"
+        initial=10,
     )
 
     number_to = forms.IntegerField(
-        label="Числа: до",
+        label="До",
         required=False,
-        help_text="Конечное значение диапазона"
+        initial=80,
     )
 
     number_step = forms.IntegerField(
-        label="Числа: шаг",
+        label="Шаг",
         required=False,
-        initial=1,
-        help_text="Шаг диапазона"
+        initial=5,
     )
 
-    # -------------------------
-    # Буквенные параметры
-    # -------------------------
     use_letter_params = forms.BooleanField(
         label="Заменять буквы",
         required=False,
-        initial=False
+        initial=True,
     )
 
     letter_param_names = forms.CharField(
-        label="Имена буквенных параметров",
+        label="Буквенные параметры",
         required=False,
         widget=forms.TextInput(attrs={
-            "placeholder": "Например: A, P, Q, line"
+            "placeholder": "Например: A, B, C"
         }),
-        help_text="Укажи имена буквенных переменных через запятую."
+        help_text="Имена буквенных параметров через запятую."
     )
 
     uppercase_letters = forms.CharField(
         label="Большие буквы",
         required=False,
         initial="A,B,C,D,M,N,K,L,P,Q,R,S,T",
-        widget=forms.TextInput(attrs={
-            "placeholder": "A,B,C,D,M,N,K,L"
-        }),
-        help_text="Используются для точек и вершин."
     )
 
     lowercase_letters = forms.CharField(
         label="Маленькие буквы",
         required=False,
         initial="a,b,c,d,m,n,k,l,p,q,r,s,t",
-        widget=forms.TextInput(attrs={
-            "placeholder": "a,b,c,d,m,n,k,l"
-        }),
-        help_text="Используются для прямых, лучей и т.п."
     )
 
     class Meta:
         model = Task
         fields = "__all__"
+
         widgets = {
+            "title": forms.TextInput(attrs={
+                "placeholder": "Например: Сумма углов треугольника"
+            }),
             "task_template": forms.Textarea(attrs={
-                "rows": 6,
-                "placeholder": "Например: Найдите площадь треугольника с основанием {a} см и высотой {h} см."
+                "rows": 7,
+                "placeholder": (
+                    "Например: В треугольнике {A}{B}{C} угол {A} = {a}°, "
+                    "угол {B} = {b}°. Найдите угол {C}."
+                )
             }),
             "solution_template": forms.Textarea(attrs={
-                "rows": 5,
-                "placeholder": "Например: S = 1/2 · {a} · {h} = {result}"
-            }),
-            "tikz_template": forms.Textarea(attrs={
-                "rows": 8,
-                "style": "font-family: Consolas, monospace;",
-                "placeholder": r"\begin{tikzpicture} ... \end{tikzpicture}"
-            }),
-            "custom_generator_name": forms.TextInput(attrs={
-                "placeholder": "Например: isosceles_triangle_angles"
-            }),
-            "title": forms.TextInput(attrs={
-                "placeholder": "Например: Площадь треугольника"
+                "rows": 6,
+                "placeholder": (
+                    "Например: Так как сумма углов треугольника равна 180°, "
+                    "то угол {C} = 180° - {a}° - {b}° = {result}°."
+                )
             }),
             "source": forms.TextInput(attrs={
                 "placeholder": "Например: Атанасян"
@@ -127,32 +97,33 @@ class TaskAdminForm(forms.ModelForm):
             "source_number": forms.TextInput(attrs={
                 "placeholder": "Например: №234"
             }),
+            "custom_generator_name": forms.TextInput(attrs={
+                "placeholder": "Служебное поле"
+            }),
+            "tikz_template": forms.Textarea(attrs={
+                "rows": 6,
+                "style": "font-family: Consolas, monospace;",
+            }),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        params_value = self.instance.params if self.instance and self.instance.pk else {}
-        self.fields["params"].initial = json.dumps(params_value, ensure_ascii=False, indent=2)
-
-        self.fields["task_type"].help_text = (
-            "Выбери тип задачи внимательно:<br>"
-            + "<br>".join(
-                f"<code>{key}</code> — {value}" for key, value in TASK_TYPE_HELP.items()
+        if self.instance and self.instance.pk:
+            self.fields["params"].initial = json.dumps(
+                self.instance.params or {},
+                ensure_ascii=False,
+                indent=2
             )
-        )
+
+        self.fields["task_type"].required = False
+        self.fields["task_type"].initial = "template_formula"
 
         self.fields["formula"].help_text = (
-            "Выбирается только для типа <code>template_formula</code>."
-        )
-        self.fields["custom_generator_name"].help_text = (
-            "Заполняется только для типа <code>custom_generator</code>."
-        )
-        self.fields["tikz_template"].help_text = (
-            "Заполняется только если нужен рисунок в LaTeX/TikZ."
+            "Выбери готовую формулу. Например: triangle_angle_sum = 180 - a - b."
         )
 
-    def _parse_csv(self, value: str):
+    def _parse_csv(self, value):
         if not value:
             return []
         return [item.strip() for item in value.split(",") if item.strip()]
@@ -170,18 +141,16 @@ class TaskAdminForm(forms.ModelForm):
 
         if number_from is None or number_to is None:
             raise forms.ValidationError(
-                "Если указаны числовые параметры, нужно заполнить поля 'от' и 'до'."
+                "Если указаны числовые параметры, заполни поля 'От' и 'До'."
             )
 
         if number_step <= 0:
             raise forms.ValidationError("Шаг должен быть больше 0.")
 
         if number_from > number_to:
-            raise forms.ValidationError("Поле 'от' не может быть больше поля 'до'.")
+            raise forms.ValidationError("'От' не может быть больше 'До'.")
 
         values = list(range(number_from, number_to + 1, number_step))
-        if not values:
-            raise forms.ValidationError("Не удалось собрать диапазон чисел.")
 
         for name in names:
             result[name] = values
@@ -190,6 +159,7 @@ class TaskAdminForm(forms.ModelForm):
 
     def _build_letter_params(self):
         use_letters = self.cleaned_data.get("use_letter_params")
+
         if not use_letters:
             return {}
 
@@ -197,30 +167,26 @@ class TaskAdminForm(forms.ModelForm):
         upper = self._parse_csv(self.cleaned_data.get("uppercase_letters", ""))
         lower = self._parse_csv(self.cleaned_data.get("lowercase_letters", ""))
 
-        if not names:
-            raise forms.ValidationError(
-                "Отмечено 'Заменять буквы', но не указаны имена буквенных параметров."
-            )
-
         result = {}
 
+        if not names:
+            return result
+
         for name in names:
-            # Простая эвристика:
-            # если имя параметра начинается с большой буквы -> даём большие буквы
-            # иначе -> маленькие
-            if name and name[0].isupper():
-                if not upper:
-                    raise forms.ValidationError("Список больших букв пуст.")
+            if name[0].isupper():
                 result[name] = upper
             else:
-                if not lower:
-                    raise forms.ValidationError("Список маленьких букв пуст.")
                 result[name] = lower
 
         return result
 
     def clean_params(self):
-        raw = self.cleaned_data.get("params", "").strip()
+        raw = self.cleaned_data.get("params", "")
+
+        if isinstance(raw, dict):
+            return raw
+
+        raw = str(raw or "").strip()
 
         if not raw:
             return {}
@@ -228,77 +194,60 @@ class TaskAdminForm(forms.ModelForm):
         try:
             parsed = json.loads(raw)
         except json.JSONDecodeError as e:
-            raise forms.ValidationError(f"Некорректный JSON: {e}")
+            raise forms.ValidationError(f"Ошибка JSON: {e}")
 
         if not isinstance(parsed, dict):
-            raise forms.ValidationError("Параметры должны быть JSON-объектом, например: {\"a\": [4,5,6]}")
+            raise forms.ValidationError("JSON должен быть объектом.")
 
         for key, value in parsed.items():
-            if not isinstance(key, str):
-                raise forms.ValidationError("Все имена параметров должны быть строками.")
             if not isinstance(value, list):
-                raise forms.ValidationError(f"Параметр '{key}' должен содержать список значений.")
+                raise forms.ValidationError(
+                    f"Параметр '{key}' должен быть списком."
+                )
             if not value:
-                raise forms.ValidationError(f"Параметр '{key}' не должен быть пустым.")
+                raise forms.ValidationError(
+                    f"Параметр '{key}' не должен быть пустым."
+                )
 
         return parsed
 
     def clean(self):
         cleaned_data = super().clean()
 
-        task_type = cleaned_data.get("task_type")
-        params = cleaned_data.get("params") or {}
+        task_template = cleaned_data.get("task_template")
         formula = cleaned_data.get("formula")
-        custom_generator_name = (cleaned_data.get("custom_generator_name") or "").strip()
-        tikz_template = (cleaned_data.get("tikz_template") or "").strip()
-        task_template = (cleaned_data.get("task_template") or "").strip()
-        solution_template = (cleaned_data.get("solution_template") or "").strip()
+        params = cleaned_data.get("params") or {}
 
-        if not task_template:
-            self.add_error("task_template", "Поле 'Текст задачи' обязательно.")
+        cleaned_data["task_type"] = "template_formula"
+        cleaned_data["custom_generator_name"] = ""
+        cleaned_data["tikz_template"] = cleaned_data.get("tikz_template") or ""
 
-        # Если JSON не введён вручную, пробуем собрать его автоматически
         auto_params = {}
+
         try:
-            numeric_params = self._build_numeric_params()
-            letter_params = self._build_letter_params()
-            auto_params.update(numeric_params)
-            auto_params.update(letter_params)
+            auto_params.update(self._build_numeric_params())
+            auto_params.update(self._build_letter_params())
         except forms.ValidationError as e:
             self.add_error("params", e)
 
-        # Если params пустой, но есть автосборка — используем её
-        if not params and auto_params:
-            cleaned_data["params"] = auto_params
-            params = auto_params
+        if auto_params:
+            params.update(auto_params)
 
-        if task_type == "template_formula":
-            if not params:
-                self.add_error("params", "Для типа 'template_formula' нужны параметры: JSON вручную или поля автогенерации.")
-            if not formula:
-                self.add_error("formula", "Для типа 'template_formula' нужно выбрать формулу.")
+        cleaned_data["params"] = params
 
-        if task_type == "custom_generator":
-            if not custom_generator_name:
-                self.add_error(
-                    "custom_generator_name",
-                    "Для типа 'custom_generator' нужно указать имя кастомного генератора."
-                )
+        if not task_template:
+            self.add_error("task_template", "Введите текст задачи.")
 
-        if task_type in ("theory", "proof"):
-            # тут параметры не запрещаем жёстко, потому что ты можешь захотеть менять буквы
-            pass
-
-        if task_type == "geometry_tikz" and not tikz_template:
+        if not params:
             self.add_error(
-                "tikz_template",
-                "Для типа 'geometry_tikz' желательно заполнить TikZ шаблон."
+                "numeric_param_names",
+                "Добавь хотя бы один параметр, например: a, b."
             )
 
-        if task_type == "template_only" and not solution_template:
+        if not formula:
             self.add_error(
-                "solution_template",
-                "Для шаблонной задачи без формулы желательно заполнить решение/ответ."
+                "formula",
+                "Выбери формулу для вычисления ответа."
             )
 
         return cleaned_data

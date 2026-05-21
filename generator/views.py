@@ -63,9 +63,14 @@ def _build_latex_document(task_objects, request_user, num_students, with_solutio
     task_objects -> queryset / list объектов Task из БД
     Для каждого ученика задачи генерируются заново.
     """
-    school = getattr(request_user, "school_name", "Не указано")
-    teacher_name = request_user.get_full_name() or request_user.username
-    today = date.today().strftime("%d.%m.%Y")
+    teacher_profile = getattr(request_user, "teacher", None)
+    if teacher_profile:
+        school = teacher_profile.school
+        teacher_name = request_user.get_full_name() or request_user.username
+    else:
+        school = "Администратор"
+        teacher_name = request_user.username
+        today = date.today().strftime("%d.%m.%Y")
 
     # Время считаем по самим объектам задач, а не по сгенерированным данным
     total_time = sum(int(getattr(task, "time_minutes", 10)) for task in task_objects)
@@ -156,7 +161,9 @@ def _build_latex_document(task_objects, request_user, num_students, with_solutio
 @login_required(login_url="login")
 @require_http_methods(["POST"])
 def generate_pdf(request):
-    if not hasattr(request.user, "teacher"):
+    if not (request.user.is_superuser
+        or request.user.is_staff
+        or hasattr(request.user, "teacher")):
         return HttpResponseForbidden("Генерация доступна только учителям")
 
     with_solutions = request.POST.get("with_solutions") == "on"

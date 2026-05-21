@@ -153,6 +153,23 @@ class Task(models.Model):
     created_at = models.DateTimeField("Создано", auto_now_add=True)
     updated_at = models.DateTimeField("Обновлено", auto_now=True)
 
+
+    DRAWING_CHOICES = (
+    ("none", "Без чертежа"),
+    ("triangle", "Треугольник"),
+    ("segment", "Отрезок"),
+    ("adjacent_angles", "Смежные углы"),
+    ("vertical_angles", "Вертикальные углы"),
+    ("rectangle", "Прямоугольник"),
+)
+
+    drawing_type = models.CharField(
+        "Тип чертежа",
+        max_length=50,
+        choices=DRAWING_CHOICES,
+        default="none"
+    )
+
     class Meta:
         verbose_name = "Задача"
         verbose_name_plural = "Задачи"
