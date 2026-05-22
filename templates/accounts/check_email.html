@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Подтвердите email{% endblock %}
+
+{% block content %}
+<div class="container text-center" style="max-width: 620px;">
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-5">
+            <i class="bi bi-envelope-check text-primary" style="font-size:60px;"></i>
+
+            <h1 class="fw-bold mt-3">Подтвердите email</h1>
+
+            <p class="text-muted">
+                Мы отправили ссылку подтверждения на вашу почту:
+            </p>
+
+            <p class="fw-bold">{{ email }}</p>
+
+            <a href="{% url 'login' %}" class="btn btn-primary mt-3">
+                Перейти ко входу
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

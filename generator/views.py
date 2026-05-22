@@ -43,7 +43,7 @@ def make_preview_list():
     return preview
 
 
-@login_required(login_url="login")
+@login_required
 def index(request):
     preview = make_preview_list()
 
@@ -64,13 +64,14 @@ def _build_latex_document(task_objects, request_user, num_students, with_solutio
     Для каждого ученика задачи генерируются заново.
     """
     teacher_profile = getattr(request_user, "teacher", None)
+    today = date.today().strftime("%d.%m.%Y")
+
     if teacher_profile:
-        school = teacher_profile.school
+        school = teacher_profile.school or "Не указано"
         teacher_name = request_user.get_full_name() or request_user.username
     else:
         school = "Администратор"
         teacher_name = request_user.username
-        today = date.today().strftime("%d.%m.%Y")
 
     # Время считаем по самим объектам задач, а не по сгенерированным данным
     total_time = sum(int(getattr(task, "time_minutes", 10)) for task in task_objects)
@@ -226,8 +227,11 @@ def generate_pdf(request):
 
         return HttpResponse(f"Ошибка LaTeX:<pre>{log_text}</pre>", status=500)
 
+    is_preview = request.POST.get("preview") == "1"
+
     return FileResponse(
         open(pdf_path, "rb"),
-        as_attachment=True,
+        as_attachment=not is_preview,
         filename="exam.pdf",
+        content_type="application/pdf",
     )

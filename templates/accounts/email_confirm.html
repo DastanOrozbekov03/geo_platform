@@ -1,0 +1,12 @@
+Здравствуйте, {{ user.get_full_name|default:user.username }}!
+
+Вы зарегистрировались в системе MathGen.
+
+Для подтверждения email перейдите по ссылке:
+
+http://{{ domain }}{% url 'activate_account' uidb64=uid token=token %}
+
+Если это были не вы — просто проигнорируйте это письмо.
+
+С уважением,
+MathGen

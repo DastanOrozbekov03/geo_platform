@@ -16,12 +16,24 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from accounts.views import home
+from django.shortcuts import redirect
+
+
+def root_redirect(request):
+    if request.user.is_authenticated:
+        return redirect("home")
+    return redirect("login")
 
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path("", root_redirect, name="root"),
 
-    path('', include("accounts.urls")),     # <── ДОБАВЬ ЭТО
+    path("home/", home, name="home"),
+
+    path("admin/", admin.site.urls),
+
+    path("accounts/", include("accounts.urls")),
     path("generator/", include("generator.urls")),
     path("taskbank/", include("taskbank.urls")),
 ]

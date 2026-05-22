@@ -1,30 +1,230 @@
-{% extends "base.html" %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Вход | MathGen ID</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-{% block title %}Вход{% endblock %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 
-{% block content %}
-<div class="mx-auto" style="max-width:400px;">
-    <h2 class="mb-4">Вход</h2>
+    <style>
+        body {
+            min-height: 100vh;
+            background: #f7faff;
+            font-family: Arial, sans-serif;
+        }
 
-    <form method="post">
-        {% csrf_token %}
-        {% for field in form %}
-            <div class="mb-3">
-                <label class="form-label">{{ field.label }}</label>
-                {{ field }}
-                {% if field.errors %}
-                    <div class="text-danger">{{ field.errors }}</div>
-                {% endif %}
+        .auth-page {
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .auth-left {
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 50px;
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 430px;
+        }
+
+        .auth-logo {
+            font-size: 26px;
+            font-weight: 900;
+            margin-bottom: 80px;
+        }
+
+        .auth-logo span {
+            color: #0d6efd;
+        }
+
+        .auth-title {
+            font-size: 38px;
+            font-weight: 900;
+            color: #073b78;
+            margin-bottom: 35px;
+        }
+
+        .form-control {
+            height: 54px;
+            border-radius: 14px;
+        }
+
+        .input-group-text {
+            border-radius: 14px 0 0 14px;
+        }
+
+        .btn-login {
+            height: 54px;
+            border-radius: 14px;
+            font-weight: 700;
+            box-shadow: 0 8px 20px rgba(13, 110, 253, .25);
+        }
+
+        .auth-footer {
+            margin-top: 100px;
+            font-size: 14px;
+            color: #98a6bb;
+        }
+
+        .auth-right {
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 70px;
+            background:
+                linear-gradient(rgba(0, 39, 90, .65), rgba(0, 16, 50, .8)),
+                url("https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=1500&q=80");
+            background-size: cover;
+            background-position: center;
+        }
+
+        .auth-info {
+            max-width: 650px;
+        }
+
+        .auth-info h1 {
+            font-size: 48px;
+            font-weight: 900;
+            margin-bottom: 30px;
+        }
+
+        .auth-info p {
+            font-size: 20px;
+            line-height: 1.65;
+            font-weight: 600;
+        }
+
+        .auth-tags {
+            margin-top: 55px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            font-weight: 700;
+        }
+
+        @media (max-width: 992px) {
+            .auth-page {
+                grid-template-columns: 1fr;
+            }
+
+            .auth-right {
+                display: none;
+            }
+
+            .auth-left {
+                padding: 30px 20px;
+            }
+
+            .auth-logo {
+                margin-bottom: 45px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="auth-page">
+
+    <div class="auth-left">
+        <div class="auth-card">
+
+            <div class="auth-logo">
+                MathGen <span>ID</span>
             </div>
-        {% endfor %}
 
-        <button type="submit" class="btn btn-primary w-100">Войти</button>
-    </form>
+            <h1 class="auth-title">Вход</h1>
 
-    <p class="mt-3">
-        Нет аккаунта? 
-        <a href="{% url 'register_teacher' %}">Зарегистрироваться как учитель</a>  
-        <!-- <a href="{% url 'register_student' %}">Регистрация ученика</a> -->
-    </p>
+            {% if form.errors %}
+                <div class="alert alert-danger">
+                    Неверный логин или пароль.
+                </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label class="form-label">Введите логин</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white">
+                            <i class="bi bi-person"></i>
+                        </span>
+                        {{ form.username }}
+                    </div>
+                </div>
+
+                <div class="mb-2 d-flex justify-content-between align-items-center">
+                    <label class="form-label mb-0">Введите пароль</label>
+                    <a href="{% url 'password_reset' %}" class="text-decoration-none fw-semibold small">
+                        Я забыл пароль
+                    </a>
+                </div>
+
+                <div class="input-group mb-4">
+                    <span class="input-group-text bg-white">
+                        <i class="bi bi-lock"></i>
+                    </span>
+                    {{ form.password }}
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 btn-login">
+                    Войти
+                </button>
+            </form>
+            
+            <div class="mt-4 text-center">
+
+            <p class="text-muted mb-3">
+                Нет аккаунта?
+            </p>
+
+            <div class="d-flex gap-2">
+                <a href="{% url 'register_teacher' %}" class="btn btn-outline-primary w-100">
+                    <i class="bi bi-person-workspace"></i>
+                    Зарегистрироваться как учитель
+                </a>
+
+                <a href="{% url 'register_student' %}" class="btn btn-outline-secondary w-100">
+                    <i class="bi bi-mortarboard"></i>
+                    Зарегистрироваться как ученик
+                </a>
+            </div>
+
+        </div>
+
+            <div class="auth-footer">
+                Безопасный вход в образовательную платформу MathGen.
+            </div>
+
+        </div>
+    </div>
+
+    <div class="auth-right">
+        <div class="auth-info">
+            <h1>MathGen ID</h1>
+            <p>
+                Система авторизации для доступа к генератору контрольных работ,
+                банку задач, автоматическим чертежам и PDF-документам.
+            </p>
+
+            <div class="auth-tags">
+                <span><i class="bi bi-file-earmark-pdf"></i> PDF</span>
+                <span><i class="bi bi-magic"></i> Авто-чертежи</span>
+                <span><i class="bi bi-shield-check"></i> Безопасный вход</span>
+            </div>
+        </div>
+    </div>
+
 </div>
-{% endblock %}
+
+</body>
+</html>

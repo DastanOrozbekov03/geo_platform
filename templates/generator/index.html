@@ -49,15 +49,15 @@
             <div class="d-flex flex-column gap-3" id="taskList">
                 {% for task in tasks %}
                     <div class="task-card task-item"
-                         data-time="{{ task.time_minutes }}"
-                         data-topic="{{ task.topic|lower }}"
-                         data-level="{{ task.level }}">
+                        data-time="{{ task.time_minutes }}"
+                        data-topic="{{ task.topic|lower }}"
+                        data-level="{{ task.level }}">
                         <div class="d-flex justify-content-between align-items-start task-topbar">
                             <label class="task-main-label">
                                 <input type="checkbox"
-                                       class="form-check-input task-checkbox"
-                                       name="selected_tasks"
-                                       value="{{ task.id }}">
+                                        class="form-check-input task-checkbox"
+                                        name="selected_tasks"
+                                        value="{{ task.id }}">
 
                                 <div>
                                     <div class="task-title">
@@ -127,13 +127,13 @@
                         Количество учеников
                     </label>
                     <input type="number"
-                           id="num_students"
-                           name="num_students"
-                           class="form-control"
-                           value="1"
-                           min="1"
-                           max="100"
-                           required>
+                            id="num_students"
+                            name="num_students"
+                            class="form-control"
+                            value="1"
+                            min="1"
+                            max="100"
+                            required>
                     <div class="form-text">
                         Для каждого ученика будут сгенерированы случайные параметры выбранных задач.
                     </div>
@@ -150,8 +150,19 @@
             </div>
 
             <div class="submit-wrap mt-4">
-                <button id="submitBtn" class="btn btn-primary px-4" type="submit">
-                    <i class="bi bi-file-earmark-pdf me-2"></i>Сгенерировать PDF
+                <button type="submit"
+                        name="preview"
+                        value="1"
+                        formtarget="_blank"
+                        class="btn btn-outline-primary">
+                    <i class="bi bi-eye"></i>
+                    Предпросмотр
+                </button>
+
+                <button type="submit"
+                        class="btn btn-primary">
+                    <i class="bi bi-filetype-pdf"></i>
+                    Сгенерировать PDF
                 </button>
             </div>
         </div>

@@ -1,79 +1,155 @@
-<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
-  <div class="container">
+<nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top py-3">
+    <div class="container">
 
-    <!-- BRAND -->
-    <a class="navbar-brand fw-bold text-primary" href="{% url 'home' %}">
-      <i class="bi bi-easel2 me-1"></i>GeoGen
-    </a>
+        <!-- LOGO -->
+        <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="{% url 'home' %}">
+            <div class="bg-primary text-white rounded-3 d-flex align-items-center justify-content-center"
+                  style="width:38px;height:38px;">
+                <i class="bi bi-triangle"></i>
+            </div>
 
-    <button class="navbar-toggler" type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navMenu">
-      <span class="navbar-toggler-icon"></span>
-    </button>
+            <span class="fs-5">MathGen</span>
+        </a>
 
-    <div class="collapse navbar-collapse" id="navMenu">
+        <!-- MOBILE BUTTON -->
+        <button class="navbar-toggler border-0 shadow-none"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarContent">
 
-      <!-- LEFT MENU -->
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <i class="bi bi-list fs-2"></i>
+        </button>
 
-        <li class="nav-item">
-          <a href="{% url 'home' %}" class="nav-link">Главная</a>
-        </li>
+        <!-- NAV -->
+        <div class="collapse navbar-collapse" id="navbarContent">
 
-        {% if user.is_authenticated and user.teacher or user.is_staff or user.is_superuser %}
-        <li class="nav-item">
-          <a href="{% url 'generator:index' %}" class="nav-link">Генератор</a>
-        </li>
-        {% endif %}
+            <!-- CENTER -->
+            <ul class="navbar-nav mx-auto gap-lg-2">
 
-        {% if user.is_authenticated %}
-            {% if user.is_staff or user.is_superuser %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'taskbank_dashboard' %}">
-                        <i class="bi bi-journal-plus"></i>
-                        Банк задач
+                    <a href="{% url 'home' %}"
+                        class="nav-link fw-medium">
+                        Главная
                     </a>
                 </li>
-            {% endif %}
-        {% endif %}
-      </ul>
 
-      <!-- RIGHT PANEL -->
-      <div class="d-flex align-items-center gap-3">
+                {% if user.is_authenticated %}
 
-        {% if user.is_authenticated %}
+                    {% if user.teacher or user.is_staff or user.is_superuser %}
+                    <li class="nav-item">
+                        <a href="{% url 'generator:index' %}"
+                            class="nav-link fw-medium">
+                            Генератор
+                        </a>
+                    </li>
+                    {% endif %}
 
-          <!-- ROLE ICON -->
-          {% if user.teacher %}
-            <i class="bi bi-mortarboard fs-5 text-primary" title="Учитель"></i>
-          {% elif user.student %}
-            <i class="bi bi-person-circle fs-5 text-primary" title="Ученик"></i>
-          {% endif %}
+                    {% if user.is_staff or user.is_superuser %}
+                    <li class="nav-item">
+                        <a href="{% url 'taskbank_dashboard' %}"
+                            class="nav-link fw-medium">
+                            Банк задач
+                        </a>
+                    </li>
+                    {% endif %}
 
-          <!-- USER -->
-          <span class="fw-semibold text-dark">
-            {{ user.username }}
-          </span>
+                {% endif %}
+            </ul>
 
-          <!-- LOGOUT -->
-          <a href="{% url 'logout' %}" class="btn btn-outline-primary btn-sm">
-            Выйти
-          </a>
+            <!-- RIGHT -->
+            <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0">
 
-        {% else %}
+                {% if user.is_authenticated %}
 
-          <a href="{% url 'login' %}" class="btn btn-outline-primary btn-sm">
-            Вход
-          </a>
+                    <div class="dropdown">
 
-          <a href="{% url 'register_teacher' %}" class="btn btn-primary btn-sm">
-            Регистрация
-          </a>
+                        <button class="btn btn-light border rounded-pill px-3 py-2 d-flex align-items-center gap-2"
+                                data-bs-toggle="dropdown">
 
-        {% endif %}
+                            <div class="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center"
+                                  style="width:34px;height:34px;">
 
-      </div>
+                                {% if user.is_staff or user.is_superuser %}
+                                    <i class="bi bi-shield-check"></i>
+
+                                {% elif user.teacher %}
+                                    <i class="bi bi-person-workspace"></i>
+
+                                {% elif user.student %}
+                                    <i class="bi bi-mortarboard"></i>
+
+                                {% else %}
+                                    <i class="bi bi-person"></i>
+                                {% endif %}
+
+                            </div>
+
+                            <span class="fw-semibold">
+                                {{ user.username }}
+                            </span>
+
+                        </button>
+
+                        <ul class="dropdown-menu dropdown-menu-end border-0 shadow rounded-4 p-2 mt-2"
+                            style="min-width:240px;">
+
+                            <li class="px-3 py-2">
+                                <div class="fw-bold">
+                                    {{ user.get_full_name|default:user.username }}
+                                </div>
+
+                                <small class="text-muted">
+                                    {% if user.is_staff or user.is_superuser %}
+                                        Администратор
+                                    {% elif user.teacher %}
+                                        Учитель
+                                    {% elif user.student %}
+                                        Ученик
+                                    {% endif %}
+                                </small>
+                            </li>
+
+                            <li><hr class="dropdown-divider"></li>
+
+                            <li>
+                                <a class="dropdown-item rounded-3 py-2"
+                                    href="{% url 'profile' %}">
+
+                                    <i class="bi bi-person-circle me-2"></i>
+                                    Профиль
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+
+                            <li>
+                                <a class="dropdown-item rounded-3 py-2 text-danger"
+                                    href="{% url 'logout' %}">
+
+                                    <i class="bi bi-box-arrow-right me-2"></i>
+                                    Выйти
+                                </a>
+                            </li>
+
+                        </ul>
+
+                    </div>
+
+                {% else %}
+
+                    <a href="{% url 'login' %}"
+                        class="btn btn-light border rounded-pill px-4">
+                        Вход
+                    </a>
+
+                    <a href="{% url 'register_teacher' %}"
+                        class="btn btn-primary rounded-pill px-4">
+                        Регистрация
+                    </a>
+
+                {% endif %}
+
+            </div>
+
+        </div>
     </div>
-  </div>
 </nav>
