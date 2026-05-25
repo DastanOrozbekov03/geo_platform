@@ -1,14 +1,11 @@
 import os
 import tempfile
+import shutil
 from datetime import date
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.http import (
-    FileResponse,
-    HttpResponse,
-    HttpResponseBadRequest,
-    HttpResponseForbidden,
-)
+from django.http import FileResponse, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
 
@@ -59,10 +56,6 @@ def index(request):
 
 
 def _build_latex_document(task_objects, request_user, num_students, with_solutions):
-    """
-    task_objects -> queryset / list объектов Task из БД
-    Для каждого ученика задачи генерируются заново.
-    """
     teacher_profile = getattr(request_user, "teacher", None)
     today = date.today().strftime("%d.%m.%Y")
 
@@ -73,39 +66,55 @@ def _build_latex_document(task_objects, request_user, num_students, with_solutio
         school = "Администратор"
         teacher_name = request_user.username
 
-    # Время считаем по самим объектам задач, а не по сгенерированным данным
     total_time = sum(int(getattr(task, "time_minutes", 10)) for task in task_objects)
 
     parts = [
-        r"\documentclass[12pt]{article}",
+        r"\documentclass[11pt]{article}",
         r"\usepackage{fontspec}",
         r"\setmainfont{Times New Roman}",
-        r"\usepackage{geometry, graphicx, amsmath, amssymb, tikz}",
-        r"\geometry{a4paper, margin=1in}",
+        r"\usepackage{geometry}",
+        r"\usepackage{graphicx}",
+        r"\usepackage{array}",
+        r"\usepackage{amsmath, amssymb, tikz}",
+        r"\geometry{a4paper, top=0.9cm, bottom=1.5cm, left=1.7cm, right=1.7cm}",
+        r"\setlength{\parindent}{0pt}",
+        r"\setlength{\parskip}{4pt}",
         r"\begin{document}",
     ]
 
     for student_idx in range(1, num_students + 1):
-        # Для КАЖДОГО ученика создаем новый набор задач
         student_tasks = [generate_task_instance(task) for task in task_objects]
 
         parts.extend([
             r"\begin{center}",
-            r"\LARGE \textbf{Контрольная работа} \\[0.3em]",
-            rf"{{\fontsize{{20}}{{16}}\selectfont \textbf{{Вариант №{student_idx}}}}}\\[0.3em]",
-            r"\rule{\textwidth}{0.5pt}",
+            r"\begin{tabular}{m{0.38\textwidth} m{0.18\textwidth} m{0.38\textwidth}}",
+            r"\centering\fontsize{8.5}{9.5}\selectfont\textbf{КЫРГЫЗ РЕСПУБЛИКАСЫНЫН\\ИЛИМ БИЛИМ БЕРҮҮ МИНИСТРЛИГИ}"
+            r" & "
+            r"\centering\includegraphics[width=1.65cm]{gerb.png}"
+            r" & "
+            r"\centering\fontsize{8.5}{9.5}\selectfont\textbf{МИНИСТЕРСТВО ПРОСВЕЩЕНИЯ\\КЫРГЫЗСКОЙ РЕСПУБЛИКИ}",
+            r"\end{tabular}",
             r"\end{center}",
-            "",
+            r"\vspace{-0.15cm}",
+            r"\noindent\rule{\textwidth}{0.7pt}",
+            r"\vspace{0.08cm}",
+
+            r"\begin{center}",
+            r"{\fontsize{16}{16}\selectfont\textbf{Контрольная работа}}\\[-0.05cm]",
+            rf"{{\fontsize{{12}}{{12}}\selectfont\textbf{{Вариант №{student_idx}}}}}",
+            r"\end{center}",
+            r"\vspace{-0.1cm}",
+
             r"\begin{flushright}",
-            r"{\small",
-            f"Учитель: {latex_escape(teacher_name)}\\\\[0.2em]",
-            f"Школа: {latex_escape(school)}\\\\[0.2em]",
-            f"Количество учеников: {num_students}\\\\[0.2em]",
-            f"Дата: {today}\\\\[0.2em]",
-            f"Общее время: {total_time} минут\\\\",
+            r"{\fontsize{9}{10}\selectfont",
+            f"Учитель: {latex_escape(teacher_name)}\\\\",
+            f"Школа: {latex_escape(school)}\\\\",
+            f"Дата: {today}\\\\",
+            f"Количество учеников: {num_students}\\\\",
+            f"Общее время: {total_time} минут",
             r"}",
             r"\end{flushright}",
-            "",
+            r"\vspace{0.15cm}",
         ])
 
         for i, task_data in enumerate(student_tasks, start=1):
@@ -116,11 +125,9 @@ def _build_latex_document(task_objects, request_user, num_students, with_solutio
             subtopic = task_data.get("subtopic", "")
             difficulty = task_data.get("difficulty", 1)
             time_minutes = task_data.get("time_minutes", 10)
-            source = task_data.get("source", "")
-            source_number = task_data.get("source_number", "")
 
             parts.extend([
-                f"\\subsection*{{Задача {i}}}",
+                rf"\textbf{{Задача {i}}}\\[-0.05cm]",
                 f"\\textbf{{Тема:}} {latex_escape(topic)}\\\\",
             ])
 
@@ -129,15 +136,7 @@ def _build_latex_document(task_objects, request_user, num_students, with_solutio
 
             parts.extend([
                 f"\\textbf{{Сложность:}} {difficulty}\\\\",
-                f"\\textbf{{Время:}} {time_minutes} минут\\\\[6pt]",
-            ])
-
-            if source or source_number:
-                parts.append(
-                    f"\\textbf{{Источник:}} {latex_escape(source)} {latex_escape(source_number)}\\\\[6pt]"
-                )
-
-            parts.extend([
+                f"\\textbf{{Время:}} {time_minutes} минут\\\\[4pt]",
                 latex_escape(str(task_text)),
                 "",
             ])
@@ -162,9 +161,11 @@ def _build_latex_document(task_objects, request_user, num_students, with_solutio
 @login_required(login_url="login")
 @require_http_methods(["POST"])
 def generate_pdf(request):
-    if not (request.user.is_superuser
+    if not (
+        request.user.is_superuser
         or request.user.is_staff
-        or hasattr(request.user, "teacher")):
+        or hasattr(request.user, "teacher")
+    ):
         return HttpResponseForbidden("Генерация доступна только учителям")
 
     with_solutions = request.POST.get("with_solutions") == "on"
@@ -202,6 +203,14 @@ def generate_pdf(request):
 
     temp_dir = tempfile.mkdtemp()
     tex_path = os.path.join(temp_dir, "document.tex")
+
+    gerb_src = settings.BASE_DIR / "static" / "images" / "gerb.png"
+    gerb_dst = os.path.join(temp_dir, "gerb.png")
+
+    if os.path.exists(gerb_src):
+        shutil.copy(gerb_src, gerb_dst)
+    else:
+        return HttpResponse(f"Не найден герб: {gerb_src}", status=500)
 
     try:
         latex_content = _build_latex_document(
