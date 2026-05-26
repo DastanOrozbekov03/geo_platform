@@ -1,43 +1,51 @@
+import random
+from datetime import timedelta
+
 from django.contrib import messages
-from django.contrib.auth import login, logout
+from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.models import User
-from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth.views import LoginView
 from django.core.mail import send_mail
 from django.shortcuts import render, redirect
-from django.template.loader import render_to_string
-from django.utils.encoding import force_bytes, force_str
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.contrib.auth.forms import PasswordChangeForm
-from django.contrib.auth import update_session_auth_hash
+from django.utils import timezone
+
 from .forms import TeacherSignUpForm, StudentSignUpForm, LoginForm, ProfileForm
-from .models import Teacher, Student
+from .models import Teacher, Student, EmailVerificationCode
 
 
 def home(request):
     return render(request, "home.html", {"home": True})
 
 
-def send_activation_email(request, user):
-    current_site = request.get_host()
+def send_email_code(user):
+    existing_code = EmailVerificationCode.objects.filter(user=user).first()
 
-    subject = "Подтверждение регистрации MathGen"
+    if existing_code:
+        diff = timezone.now() - existing_code.created_at
+        if diff < timedelta(seconds=30):
+            return False
 
-    message = render_to_string("accounts/email_confirm.html", {
-        "user": user,
-        "domain": current_site,
-        "uid": urlsafe_base64_encode(force_bytes(user.pk)),
-        "token": default_token_generator.make_token(user),
-    })
+    code = str(random.randint(100000, 999999))
+
+    EmailVerificationCode.objects.update_or_create(
+        user=user,
+        defaults={
+            "code": code,
+            "created_at": timezone.now(),
+        }
+    )
 
     send_mail(
-        subject=subject,
-        message=message,
+        subject="Код подтверждения MathGen",
+        message=f"Ваш код подтверждения MathGen: {code}\n\nКод действует 10 минут.",
         from_email=None,
         recipient_list=[user.email],
         fail_silently=False,
     )
+
+    return True
 
 
 def register_teacher(request):
@@ -59,11 +67,10 @@ def register_teacher(request):
                 email_confirmed=False,
             )
 
-            send_activation_email(request, user)
+            request.session["verify_user_id"] = user.id
+            send_email_code(user)
 
-            return render(request, "accounts/check_email.html", {
-                "email": user.email
-            })
+            return redirect("verify_email_code")
     else:
         form = TeacherSignUpForm()
 
@@ -88,37 +95,82 @@ def register_student(request):
                 school=form.cleaned_data.get("school", ""),
             )
 
-            send_activation_email(request, user)
+            request.session["verify_user_id"] = user.id
+            send_email_code(user)
 
-            return render(request, "accounts/check_email.html", {
-                "email": user.email
-            })
+            return redirect("verify_email_code")
     else:
         form = StudentSignUpForm()
 
     return render(request, "accounts/register_student.html", {"form": form})
 
 
-def activate_account(request, uidb64, token):
+def verify_email_code(request):
+    user_id = request.session.get("verify_user_id")
+
+    if not user_id:
+        messages.error(request, "Сессия подтверждения не найдена.")
+        return redirect("login")
+
     try:
-        uid = force_str(urlsafe_base64_decode(uidb64))
-        user = User.objects.get(pk=uid)
+        user = User.objects.get(id=user_id)
+        email_code = user.email_code
     except Exception:
-        user = None
+        messages.error(request, "Код подтверждения не найден.")
+        return redirect("login")
 
-    if user is not None and default_token_generator.check_token(user, token):
-        user.is_active = True
-        user.save()
+    if request.method == "POST":
+        code = request.POST.get("code", "").strip()
 
-        if hasattr(user, "teacher"):
-            user.teacher.email_confirmed = True
-            user.teacher.save()
+        if email_code.is_expired():
+            email_code.delete()
+            messages.error(request, "Код истёк. Нажмите «Отправить повторно».")
+            return redirect("verify_email_code")
 
-        login(request, user)
-        messages.success(request, "Email успешно подтверждён. Добро пожаловать в MathGen.")
-        return redirect("home")
+        if code == email_code.code:
+            user.is_active = True
+            user.save()
 
-    return render(request, "accounts/activation_invalid.html")
+            if hasattr(user, "teacher"):
+                user.teacher.email_confirmed = True
+                user.teacher.save()
+
+            email_code.delete()
+            request.session.pop("verify_user_id", None)
+
+            login(request, user)
+            messages.success(request, "Email подтверждён. Добро пожаловать!")
+            return redirect("home")
+
+        messages.error(request, "Неверный код подтверждения.")
+
+    return render(request, "accounts/verify_email_code.html", {
+        "email": user.email,
+    })
+
+
+def resend_email_code(request):
+    user_id = request.session.get("verify_user_id")
+
+    if not user_id:
+        messages.error(request, "Сессия подтверждения не найдена.")
+        return redirect("login")
+
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        messages.error(request, "Пользователь не найден.")
+        return redirect("login")
+
+    sent = send_email_code(user)
+
+    if sent:
+        messages.success(request, "Новый код отправлен на почту.")
+    else:
+        messages.warning(request, "Повторно отправить код можно через 30 секунд.")
+
+    return redirect("verify_email_code")
+
 
 class CustomLoginView(LoginView):
     template_name = "accounts/login.html"
@@ -141,13 +193,14 @@ def user_logout(request):
     logout(request)
     return redirect("login")
 
+
 @login_required
 def profile_view(request):
     return render(request, "accounts/profile.html")
 
+
 @login_required
 def profile_edit(request):
-
     form = ProfileForm(instance=request.user)
 
     if request.method == "POST":
@@ -165,32 +218,28 @@ def profile_edit(request):
             return redirect("profile")
 
     return render(request, "accounts/profile_edit.html", {
-        "form": form
+        "form": form,
     })
+
 
 @login_required
 def change_password(request):
     if request.method == "POST":
         form = PasswordChangeForm(request.user, request.POST)
-
-        for field in form.fields.values():
-            field.widget.attrs.update({
-                "class": "form-control rounded-3"
-            })
-
-        if form.is_valid():
-            user = form.save()
-            update_session_auth_hash(request, user)
-            messages.success(request, "Пароль успешно изменён.")
-            return redirect("profile")
     else:
         form = PasswordChangeForm(request.user)
 
-        for field in form.fields.values():
-            field.widget.attrs.update({
-                "class": "form-control rounded-3"
-            })
+    for field in form.fields.values():
+        field.widget.attrs.update({
+            "class": "form-control rounded-3"
+        })
+
+    if request.method == "POST" and form.is_valid():
+        user = form.save()
+        update_session_auth_hash(request, user)
+        messages.success(request, "Пароль успешно изменён.")
+        return redirect("profile")
 
     return render(request, "accounts/change_password.html", {
-        "form": form
+        "form": form,
     })
